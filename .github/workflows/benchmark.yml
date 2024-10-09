@@ -1,0 +1,58 @@
+name: Benchmarks
+
+on: [push]
+
+permissions:
+  deployments: write
+  contents: write
+
+jobs:
+  benchmark:
+    name: Run benchmarks
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y ninja-build clang libbenchmark-dev
+
+    - name: Set up CMake
+      uses: jwlawson/actions-setup-cmake@v1.12
+      with:
+        cmake-version: '3.20.x'
+
+    - name: Configure CMake
+      run: |
+        cmake -S . -B build-release -G Ninja \
+        -DCMAKE_BUILD_TYPE=Release \
+        -DBUILD_TESTING=NO \
+        -DBUILD_BENCHMARK=YES \
+        -DCMAKE_C_COMPILER=clang \
+        -DCMAKE_CXX_COMPILER=clang++ \
+        -DCMAKE_CXX_FLAGS="-Wall -Wextra -Werror -Wpedantic" \
+        -DCMAKE_CXX_FLAGS_RELEASE="-O3 -march=native -stdlib=libstdc++"
+
+    - name: Build
+      run: cmake --build build-release --verbose --config Release
+
+    - name: Run benchmark
+      run: |
+        ./build-release/benchmark/qmutils-bench --benchmark_format=json | tee benchmark_result.json
+
+    - name: Download previous benchmark data
+      uses: actions/cache@v4
+      with:
+        path: ./cache
+        key: ${{ runner.os }}-benchmark
+
+    - name: Store benchmark result
+      uses: benchmark-action/github-action-benchmark@v1
+      with:
+        name: Benchmark
+        tool: 'googlecpp'
+        output-file-path: benchmark_result.json
+        external-data-json-path: ./cache/benchmark_result.json
+        fail-on-alert: true
