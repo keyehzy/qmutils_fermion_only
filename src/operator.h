@@ -63,8 +63,9 @@ class Operator {
   }
 
   [[nodiscard]] constexpr uint8_t data() const noexcept {
-    return (data_.type << TYPE_BIT_POSITION) |
-           (data_.spin << SPIN_BIT_POSITION) | data_.orbital;
+    return static_cast<uint8_t>(data_.type << TYPE_BIT_POSITION) |
+           static_cast<uint8_t>(data_.spin << SPIN_BIT_POSITION) |
+           static_cast<uint8_t>(data_.orbital);
   }
 
  private:
