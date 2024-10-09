@@ -42,6 +42,14 @@ class Term {
 
   Operator& operator[](size_t index) { return m_operators[index]; }
 
+  Term& operator*=(const Term& other) {
+    m_coefficient *= other.m_coefficient;
+    m_operators.reserve(m_operators.size() + other.m_operators.size());
+    m_operators.insert(m_operators.end(), other.m_operators.begin(),
+                       other.m_operators.end());
+    return *this;
+  }
+
   Term& operator*=(Operator op) {
     m_operators.push_back(op);
     return *this;
@@ -49,11 +57,6 @@ class Term {
 
   Term& operator*=(const coefficient_type& scalar) {
     m_coefficient *= scalar;
-    return *this;
-  }
-
-  Term& operator/=(const coefficient_type& scalar) {
-    m_coefficient /= scalar;
     return *this;
   }
 
@@ -71,6 +74,11 @@ class Term {
   container_type m_operators;
 };
 
+inline Term operator*(Term term, const Term& other) {
+  term *= other;
+  return term;
+}
+
 inline Term operator*(Term term, Operator other) {
   term *= other;
   return term;
@@ -83,11 +91,6 @@ inline Term operator*(Term term, const Term::coefficient_type& scalar) {
 
 inline Term operator*(const Term::coefficient_type& scalar, Term term) {
   return term * scalar;
-}
-
-inline Term operator/(Term term, const Term::coefficient_type& scalar) {
-  term /= scalar;
-  return term;
 }
 
 }  // namespace qmutils

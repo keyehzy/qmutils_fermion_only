@@ -69,10 +69,6 @@ TEST_F(TermTest, MultiplicationDivision) {
   Term multiplied = term * scalar;
   EXPECT_EQ(multiplied.coefficient(), coeff * scalar);
   EXPECT_EQ(multiplied.size(), term.size());
-
-  Term divided = term / scalar;
-  EXPECT_EQ(divided.coefficient(), coeff / scalar);
-  EXPECT_EQ(divided.size(), term.size());
 }
 
 TEST_F(TermTest, ComparisonOperators) {
