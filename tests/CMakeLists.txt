@@ -3,6 +3,7 @@ cmake_minimum_required(VERSION 3.14)
 add_executable(
     qmutils-test
     operator-test.cpp
+    term-test.cpp
 )
 
 target_compile_options(
