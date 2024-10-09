@@ -20,7 +20,7 @@ target_compile_options(
 
 add_library(
   qmutils
-  foo.cpp
+  operator.cpp
 )
 
 target_include_directories(
