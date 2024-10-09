@@ -1,0 +1,20 @@
+name: clang-format
+on: [push, pull_request]
+jobs:
+  check:
+    name: Clang-format
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        path:
+          - 'src'
+          - 'tests'
+          - 'benchmark'
+    steps:
+    - uses: actions/checkout@v4
+    - name: Run
+      uses: jidicula/clang-format-action@v4.13.0
+      with:
+        clang-format-version: '18'
+        check-path: ${{ matrix.path }}
+        fallback-style: 'Google'
