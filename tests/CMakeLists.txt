@@ -4,6 +4,7 @@ add_executable(
     qmutils-test
     Operator-test.cpp
     Term-test.cpp
+    Expression-test.cpp
 )
 
 target_compile_options(

@@ -107,6 +107,23 @@ inline Term operator*(const Term::coefficient_type& scalar, Term term) {
 }  // namespace qmutils
 
 template <>
+struct std::hash<qmutils::Term::container_type> {
+  size_t operator()(const qmutils::Term::container_type& container) const {
+    size_t hash = 0;
+    for (const auto& op : container) {
+      hash_combine(hash, std::hash<qmutils::Operator>{}(op));
+    }
+    return hash;
+  }
+
+ private:
+  template <typename T>
+  void hash_combine(size_t& seed, const T& value) const {
+    seed ^= std::hash<T>{}(value) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+  }
+};
+
+template <>
 struct std::hash<qmutils::Term> {
   size_t operator()(const qmutils::Term& term) const {
     size_t hash = std::hash<float>{}(term.coefficient().real()) ^
