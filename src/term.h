@@ -14,7 +14,9 @@ class Term {
   using coefficient_type = std::complex<float>;
   using container_type = std::vector<Operator>;
 
-  Term() : m_coefficient(0.0f, 0.0f) {}
+  Term() = default;
+
+  Term(Operator op) : m_coefficient(1.0f), m_operators({op}) {}
 
   Term(const coefficient_type& coeff) : m_coefficient(coeff) {}
 
@@ -66,6 +68,8 @@ class Term {
   }
 
   bool operator!=(const Term& other) const { return !(*this == other); }
+
+  Term adjoint() const noexcept;
 
   std::string to_string() const;
 

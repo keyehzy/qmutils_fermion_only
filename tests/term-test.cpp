@@ -127,5 +127,27 @@ TEST_F(TermTest, IntegrationWithOperator) {
   EXPECT_EQ(term.coefficient(), std::complex<float>(0.5f, -0.5f));
 }
 
+TEST_F(TermTest, Adjoint) {
+  Operator c_up_0 = Operator::creation(Operator::Spin::Up, 0);
+  Operator a_down_1 = Operator::annihilation(Operator::Spin::Down, 1);
+  std::complex<float> coeff(1.0f, 2.0f);
+
+  Term original(coeff, {c_up_0, a_down_1});
+  Term adjoint = original.adjoint();
+
+  EXPECT_EQ(adjoint.coefficient(), std::conj(coeff));
+
+  ASSERT_EQ(adjoint.operators().size(), 2);
+  EXPECT_EQ(adjoint[0], a_down_1.adjoint());
+  EXPECT_EQ(adjoint[1], c_up_0.adjoint());
+}
+
+TEST_F(TermTest, AdjointOfAdjointIsOriginal) {
+  Term original(std::complex<float>(1.0f, 2.0f), {op1, op2});
+  Term adjoint_of_adjoint = original.adjoint().adjoint();
+
+  EXPECT_EQ(original, adjoint_of_adjoint);
+}
+
 }  // namespace
 }  // namespace qmutils
