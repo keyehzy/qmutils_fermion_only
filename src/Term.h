@@ -5,7 +5,7 @@
 #include <string>
 #include <vector>
 
-#include "operator.h"
+#include "Operator.h"
 
 namespace qmutils {
 

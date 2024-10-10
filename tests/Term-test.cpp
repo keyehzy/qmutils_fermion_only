@@ -1,5 +1,5 @@
 // term_test.cpp
-#include "term.h"
+#include "Term.h"
 
 #include <gtest/gtest.h>
 

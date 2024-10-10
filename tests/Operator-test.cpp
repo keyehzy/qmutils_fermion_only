@@ -1,4 +1,4 @@
-#include "operator.h"
+#include "Operator.h"
 
 #include <gtest/gtest.h>
 
