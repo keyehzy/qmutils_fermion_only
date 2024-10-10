@@ -2,10 +2,6 @@ name: Benchmarks
 
 on: [push]
 
-permissions:
-  deployments: write
-  contents: write
-
 jobs:
   benchmark:
     name: Run benchmarks
