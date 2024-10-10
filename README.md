@@ -1,75 +1,96 @@
-# qmutils: Quantum Mechanics Utilities Library
+# qmutils: C++ Quantum Mechanics Library
 
 ## Overview
 
-qmutils is a C++ library designed to facilitate quantum mechanics calculations
-and simulations. It provides a set of tools and abstractions for working with
-quantum models, operators, and expressions, making it easier to implement and
-study various quantum systems.
+qmutils is a C++ library designed for efficient quantum mechanics calculations.
+It provides a set of tools for creating and manipulating quantum operators,
+constructing Hamiltonians, and performing various quantum mechanical
+computations.
 
-## Features
+### Key Features
 
-- Quantum operator representations
-- Expression building for quantum Hamiltonians
-- Common quantum models (e.g., Hubbard, Heisenberg)
-- Numerical methods for solving quantum systems
-- Utilities for basis state management
-- Parallelization support for large-scale computations
+- Efficient representation of quantum operators
+- Support for creating complex quantum expressions
+- Tools for constructing and solving common quantum models (e.g., Hubbard model)
+- High-performance calculations optimized for large systems
 
 ## Installation
 
-To install qmutils, follow these steps:
+### Prerequisites
+
+- C++17 compatible compiler
+- CMake (version 3.10 or higher)
+- Google Test (for running tests)
+- Google Benchmark (for running benchmarks)
+
+### Building the Library
 
 1. Clone the repository:
    ```
    git clone https://github.com/yourusername/qmutils.git
-   ```
-2. Navigate to the qmutils directory:
-   ```
    cd qmutils
    ```
-3. Create a build directory and navigate to it:
+
+2. Create a build directory and run CMake:
    ```
    mkdir build && cd build
-   ```
-4. Run CMake and build the library:
-   ```
    cmake ..
+   ```
+
+3. Build the library:
+   ```
    make
    ```
 
-## Quick Start
+## Usage
 
-Here's a simple example to get you started with qmutils:
+Here's a basic example of how to use qmutils to create a simple quantum system:
 
 ```cpp
-#include <qmutils/model.hpp>
-#include <qmutils/expression.hpp>
+#include "qmutils/operator.h"
+#include "qmutils/term.h"
 
 int main() {
-    // Create a Hubbard model
-    HubbardChain model(1.0, 0.1, 4.0, 4);  // mu, t, U, chainLength
+    // Create creation and annihilation operators
+    auto c_up = qmutils::Operator::creation(qmutils::Operator::Spin::Up, 0);
+    auto c_down = qmutils::Operator::creation(qmutils::Operator::Spin::Down, 0);
 
-    // Get the Hamiltonian
-    Expression H = model.hamiltonian();
+    // Create a term representing the density of up-spin particles
+    auto n_up = qmutils::Term(1.0, {c_up, c_up.adjoint()});
 
-    // Perform calculations...
+    // Print the term
+    std::cout << n_up.to_string() << std::endl;
 
     return 0;
 }
 ```
 
-## Contributing
+For more detailed examples, including how to construct Hamiltonians and perform
+calculations, please refer to the `examples` directory in the repository.
 
-We welcome contributions! Please see our [CONTRIBUTING.md](CONTRIBUTING.md) file
-for details on how to contribute to qmutils.
+## Testing and Benchmarking
+
+qmutils uses Google Test for unit testing and Google Benchmark for performance
+benchmarking. To run the tests and benchmarks:
+
+1. Ensure you've built the project with the testing and benchmarking options enabled:
+   ```
+   mkdir build && cd build
+   cmake -DBUILD_TESTING=ON -DBUILD_BENCHMARK=ON ..
+   make
+   ```
+
+2. Run the tests:
+   ```
+   ./tests/qmutils-test
+   ```
+
+3. Run the benchmarks:
+   ```
+   ./benchmark/qmutils_benchmark
+   ```
 
 ## License
 
-qmutils is released under the MIT License. See the [LICENSE](LICENSE) file for
-more details.
-
-## Contact
-
-For questions, issues, or suggestions, please open an issue on our [GitHub
-repository](https://github.com/keyehzy/qmutils/issues).
+qmutils is released under the MIT License. See the LICENSE file for more
+details.
