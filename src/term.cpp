@@ -3,6 +3,8 @@
 #include <numeric>
 #include <sstream>
 
+#include "assert.h"
+
 namespace qmutils {
 
 Term Term::adjoint() const noexcept {
@@ -27,6 +29,31 @@ std::string Term::to_string() const {
     oss << op.to_string() << " ";
   }
   return oss.str();
+}
+
+Term Term::creation(Operator::Spin spin, uint8_t orbital) {
+  return Term(1.0f, {Operator::creation(spin, orbital)});
+}
+
+Term Term::annihilation(Operator::Spin spin, uint8_t orbital) {
+  return Term(1.0f, {Operator::annihilation(spin, orbital)});
+}
+
+Term Term::number(Operator::Spin spin, uint8_t orbital) {
+  return Term(1.0f, {Operator::creation(spin, orbital),
+                     Operator::annihilation(spin, orbital)});
+}
+
+Term Term::spin_flip(uint8_t orbital) {
+  return Term(1.0f, {Operator::creation(Operator::Spin::Up, orbital),
+                     Operator::annihilation(Operator::Spin::Down, orbital)});
+}
+
+Term Term::hopping(uint8_t from_orbital, uint8_t to_orbital,
+                   Operator::Spin spin) {
+  QMUTILS_ASSERT(from_orbital != to_orbital);
+  return Term(1.0f, {Operator::creation(spin, to_orbital),
+                     Operator::annihilation(spin, from_orbital)});
 }
 
 }  // namespace qmutils

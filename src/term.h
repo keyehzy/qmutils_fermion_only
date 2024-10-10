@@ -73,6 +73,13 @@ class Term {
 
   std::string to_string() const;
 
+  static Term creation(Operator::Spin spin, uint8_t orbital);
+  static Term annihilation(Operator::Spin spin, uint8_t orbital);
+  static Term number(Operator::Spin spin, uint8_t orbital);
+  static Term spin_flip(uint8_t orbital);
+  static Term hopping(uint8_t from_orbital, uint8_t to_orbital,
+                      Operator::Spin spin);
+
  private:
   coefficient_type m_coefficient;
   container_type m_operators;
