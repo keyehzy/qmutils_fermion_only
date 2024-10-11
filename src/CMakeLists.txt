@@ -18,8 +18,8 @@ target_compile_options(
 
 add_library(
   qmutils
-  Operator.cpp
-  Term.cpp
+  operator.cpp
+  term.cpp
 )
 
 target_include_directories(

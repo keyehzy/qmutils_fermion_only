@@ -2,7 +2,7 @@
 
 #include <random>
 
-#include "Term.h"
+#include "qmutils/term.h"
 
 namespace qmutils {
 namespace {

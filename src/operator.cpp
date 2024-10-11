@@ -1,4 +1,4 @@
-#include "Operator.h"
+#include "qmutils/operator.h"
 
 #include <sstream>
 

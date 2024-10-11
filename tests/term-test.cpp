@@ -1,5 +1,5 @@
 // term_test.cpp
-#include "Term.h"
+#include "qmutils/term.h"
 
 #include <gtest/gtest.h>
 

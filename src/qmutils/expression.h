@@ -3,7 +3,7 @@
 #include <complex>
 #include <unordered_map>
 
-#include "Term.h"
+#include "qmutils/term.h"
 
 namespace qmutils {
 

@@ -2,9 +2,9 @@ cmake_minimum_required(VERSION 3.14)
 
 add_executable(
     qmutils-test
-    Operator-test.cpp
-    Term-test.cpp
-    Expression-test.cpp
+    operator-test.cpp
+    term-test.cpp
+    expression-test.cpp
 )
 
 target_compile_options(

@@ -1,9 +1,9 @@
-#include "Term.h"
+#include "qmutils/term.h"
 
 #include <numeric>
 #include <sstream>
 
-#include "Assert.h"
+#include "qmutils/assert.h"
 
 namespace qmutils {
 
