@@ -5,6 +5,7 @@ add_executable(
     operator-test.cpp
     term-test.cpp
     expression-test.cpp
+    normal_order-test.cpp
 )
 
 target_compile_options(

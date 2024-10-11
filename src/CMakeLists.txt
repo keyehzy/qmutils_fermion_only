@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 3.14)
 
+# find_package(OpenMP REQUIRED)
+
 add_executable(
   main
   main.cpp
@@ -21,6 +23,7 @@ add_library(
   operator.cpp
   term.cpp
   expression.cpp
+  normal_order.cpp
 )
 
 target_include_directories(
@@ -28,3 +31,9 @@ target_include_directories(
   PUBLIC
   ${CMAKE_CURRENT_SOURCE_DIR}
 )
+
+# target_link_libraries(
+#   qmutils
+#   PUBLIC
+#   OpenMP::OpenMP_CXX
+# )

@@ -4,6 +4,7 @@ add_executable(
   qmutils-bench
   term-bench.cpp
   expression-bench.cpp
+  normal_order-bench.cpp
 )
 
 target_include_directories(

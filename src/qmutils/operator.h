@@ -36,8 +36,20 @@ class Operator {
     return data() < other.data();
   }
 
+  constexpr bool operator>(const Operator &other) const noexcept {
+    return data() > other.data();
+  }
+
   constexpr bool operator==(const Operator &other) const noexcept {
     return data() == other.data();
+  }
+
+  constexpr bool operator>=(const Operator &other) const noexcept {
+    return data() >= other.data();
+  }
+
+  constexpr bool operator<=(const Operator &other) const noexcept {
+    return data() <= other.data();
   }
 
   [[nodiscard]] constexpr bool commutes_with(

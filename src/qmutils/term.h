@@ -16,14 +16,21 @@ class Term {
 
   Term() = default;
 
-  Term(Operator op) : m_coefficient(1.0f), m_operators({op}) {}
+  explicit Term(Operator op) : m_coefficient(1.0f), m_operators({op}) {}
 
-  Term(const coefficient_type& coeff) : m_coefficient(coeff) {}
+  explicit Term(const container_type& operators)
+      : m_coefficient(1.0f), m_operators(operators) {}
 
-  Term(const coefficient_type& coeff, const container_type& operators)
+  explicit Term(container_type&& operators) noexcept
+      : m_coefficient(1.0f), m_operators(std::move(operators)) {}
+
+  explicit Term(const coefficient_type& coeff) : m_coefficient(coeff) {}
+
+  explicit Term(const coefficient_type& coeff, const container_type& operators)
       : m_coefficient(coeff), m_operators(operators) {}
 
-  Term(const coefficient_type& coeff, container_type&& operators)
+  explicit Term(const coefficient_type& coeff,
+                container_type&& operators) noexcept
       : m_coefficient(coeff), m_operators(std::move(operators)) {}
 
   Term(const Term& other) = default;
