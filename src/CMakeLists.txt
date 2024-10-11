@@ -20,6 +20,7 @@ add_library(
   qmutils
   operator.cpp
   term.cpp
+  expression.cpp
 )
 
 target_include_directories(

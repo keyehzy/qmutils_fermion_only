@@ -1,5 +1,6 @@
 #pragma once
 
+#include <algorithm>
 #include <complex>
 #include <unordered_map>
 
@@ -32,6 +33,100 @@ class Expression {
 
   Expression& operator=(Expression&&) noexcept = default;
 
+  // Arithmetic operations
+  Expression& operator+=(const Expression& other) {
+    for (const auto& [ops, coeff] : other.m_terms) {
+      m_terms[ops] += coeff;
+    }
+    normalize();
+    return *this;
+  }
+
+  Expression& operator+=(const Term& other) {
+    m_terms[other.operators()] += other.coefficient();
+    normalize();
+    return *this;
+  }
+
+  Expression& operator-=(const Expression& other) {
+    for (const auto& [ops, coeff] : other.m_terms) {
+      m_terms[ops] -= coeff;
+    }
+    normalize();
+    return *this;
+  }
+
+  Expression& operator-=(const Term& other) {
+    m_terms[other.operators()] -= other.coefficient();
+    normalize();
+    return *this;
+  }
+
+  Expression& operator*=(const Expression& other) {
+    std::unordered_map<operators_type, coefficient_type> new_terms;
+    for (const auto& [ops1, coeff1] : m_terms) {
+      for (const auto& [ops2, coeff2] : other.m_terms) {
+        operators_type new_ops;
+        new_ops.reserve(ops1.size() + ops2.size());
+        new_ops.insert(new_ops.end(), ops1.begin(), ops1.end());
+        new_ops.insert(new_ops.end(), ops2.begin(), ops2.end());
+        new_terms[std::move(new_ops)] += coeff1 * coeff2;
+      }
+    }
+    m_terms = std::move(new_terms);
+    normalize();
+    return *this;
+  }
+
+  Expression& operator*=(const Term& term) {
+    std::unordered_map<operators_type, coefficient_type> new_terms;
+    for (const auto& [ops, coeff] : m_terms) {
+      operators_type new_ops;
+      new_ops.reserve(ops.size() + term.operators().size());
+      new_ops.insert(new_ops.end(), ops.begin(), ops.end());
+      new_ops.insert(new_ops.end(), term.operators().begin(),
+                     term.operators().end());
+      new_terms[new_ops] += coeff * term.coefficient();
+    }
+
+    m_terms = std::move(new_terms);
+    normalize();
+    return *this;
+  }
+
+  Expression& operator*=(const coefficient_type& scalar) {
+    for (auto& [ops, coeff] : m_terms) {
+      coeff *= scalar;
+    }
+    normalize();
+    return *this;
+  }
+
+  friend Expression operator+(Expression lhs, const Expression& rhs) {
+    lhs += rhs;
+    return lhs;
+  }
+
+  friend Expression operator-(Expression lhs, const Expression& rhs) {
+    lhs -= rhs;
+    return lhs;
+  }
+
+  friend Expression operator*(Expression lhs, const Expression& rhs) {
+    lhs *= rhs;
+    return lhs;
+  }
+
+  friend Expression operator*(Expression lhs, const coefficient_type& rhs) {
+    lhs *= rhs;
+    return lhs;
+  }
+
+  friend Expression operator*(const coefficient_type& lhs, Expression rhs) {
+    rhs *= lhs;
+    return rhs;
+  }
+
   size_t size() const { return m_terms.size(); }
 
   const std::unordered_map<operators_type, coefficient_type>& terms() const {
@@ -47,6 +142,10 @@ class Expression {
   }
 
   bool operator!=(const Expression& other) const { return !(*this == other); }
+
+  std::string to_string() const;
+
+  void normalize();
 
  private:
   std::unordered_map<operators_type, coefficient_type> m_terms;

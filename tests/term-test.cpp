@@ -85,7 +85,7 @@ TEST_F(TermTest, ComparisonOperators) {
 // d. Utility function tests
 TEST_F(TermTest, ToString) {
   Term term(coeff, {op1, op2});
-  std::string expected = "0.5-0.5i * c+(↑,0) c(↓,1) ";
+  std::string expected = "(0.5,-0.5) c+(↑,0)c(↓,1)";
   EXPECT_EQ(term.to_string(), expected);
 }
 

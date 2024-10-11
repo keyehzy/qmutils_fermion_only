@@ -3,6 +3,7 @@ cmake_minimum_required(VERSION 3.14)
 add_executable(
   qmutils-bench
   term-bench.cpp
+  expression-bench.cpp
 )
 
 target_include_directories(

@@ -63,5 +63,3 @@ BENCHMARK(BM_HashLargeTerm)->Range(1 << 10, 1 << 17);
 
 }  // namespace
 }  // namespace qmutils
-
-BENCHMARK_MAIN();
