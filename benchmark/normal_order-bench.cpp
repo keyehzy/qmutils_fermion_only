@@ -65,12 +65,8 @@ Term create_commuting_term(size_t n_operators) {
   Term::container_type operators;
   operators.reserve(n_operators);
 
-  for (size_t i = 0; i < n_operators / 2; ++i) {
+  for (size_t i = 0; i < n_operators; ++i) {
     operators.push_back(Operator::creation(Operator::Spin::Up, i % 64));
-  }
-
-  for (size_t i = 0; i < n_operators / 2; ++i) {
-    operators.push_back(Operator::annihilation(Operator::Spin::Up, i % 64));
   }
 
   std::reverse(operators.begin(), operators.end());
@@ -137,8 +133,8 @@ static void BM_NormalOrderExpression(benchmark::State& state) {
 
 // Register the benchmarks
 BENCHMARK(BM_NormalOrderRandomTerm)->Range(1, 1 << 7)->Complexity();
-BENCHMARK(BM_NormalOrderNonCommutingTerm)->Range(1, 1 << 8)->Complexity();
-BENCHMARK(BM_NormalOrderCommutingTerm)->Range(1, 1 << 8)->Complexity();
+BENCHMARK(BM_NormalOrderNonCommutingTerm)->Range(1, 1 << 10)->Complexity();
+BENCHMARK(BM_NormalOrderCommutingTerm)->Range(1, 1 << 10)->Complexity();
 BENCHMARK(BM_NormalOrderExpression)->Range(1, 1 << 7)->Complexity();
 
 }  // namespace

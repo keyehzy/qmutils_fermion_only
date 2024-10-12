@@ -1,32 +1,31 @@
 #include "qmutils/normal_order.h"
 
 #include <iostream>
-#include <stack>
 
 namespace qmutils {
 
 Expression NormalOrderer::normal_order(const Term& term) {
-  return term.coefficient() * normal_order_recursive(term.operators());
+  return term.coefficient() * normal_order_iterative(term.operators());
 }
 
 Expression NormalOrderer::normal_order(const Expression& expr) {
   Expression result;
   for (const auto& [ops, coeff] : expr.terms()) {
-    result += coeff * normal_order_recursive(ops);
+    result += coeff * normal_order_iterative(ops);
   }
   return result;
 }
 
-Expression NormalOrderer::normal_order_iterative(operators_type ops) {
+Expression NormalOrderer::normal_order_iterative(const operators_type& ops) {
   Expression result;
-  m_queue.emplace_back(ops, 1.0);
+  m_queue.emplace(ops, 1.0);
 
   while (!m_queue.empty()) {
-    auto [current, original_phase] = m_queue.front();
-    m_queue.pop_front();
+    auto [current, original_phase] = m_queue.top();
+    m_queue.pop();
 
     if (current.size() < 2) {
-      result += Term(current);
+      result += Term(original_phase, current);
       continue;
     }
 
@@ -34,11 +33,9 @@ Expression NormalOrderer::normal_order_iterative(operators_type ops) {
 
     if (auto it = m_cache.find(current); it != m_cache.end()) {
       m_cache_hits++;
-      return it->second;
+      return original_phase * it->second;
     }
     m_cache_misses++;
-
-    Expression partial;
 
     for (size_t i = 1; i < current.size(); ++i) {
       size_t j = i;
@@ -51,18 +48,22 @@ Expression NormalOrderer::normal_order_iterative(operators_type ops) {
           operators_type contracted(current);
           contracted.erase(contracted.begin() + j - 1,
                            contracted.begin() + j + 1);
-          m_queue.emplace_back(std::move(contracted), phase * original_phase);
+          m_queue.emplace(std::move(contracted), phase * original_phase);
 
           operators_type swapped(current);
           std::swap(swapped[j - 1], swapped[j]);
-          m_queue.emplace_back(std::move(swapped), -phase * original_phase);
+          m_queue.emplace(std::move(swapped), -phase * original_phase);
           goto end;
         }
       }
     }
-    partial = Expression(Term(phase * original_phase, current));
-    m_cache[current] = partial;
-    result += partial;
+
+    {
+      Expression partial = Expression(Term(phase * original_phase, current));
+      m_cache[current] = partial;
+      result += partial;
+    }
+
   end:  // End of the loop
     continue;
   }
