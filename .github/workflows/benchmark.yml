@@ -29,7 +29,7 @@ jobs:
         -DCMAKE_C_COMPILER=clang \
         -DCMAKE_CXX_COMPILER=clang++ \
         -DCMAKE_CXX_FLAGS="-Wall -Wextra -Werror -Wpedantic" \
-        -DCMAKE_CXX_FLAGS_RELEASE="-O3 -march=native -stdlib=libstdc++"
+        -DCMAKE_CXX_FLAGS_RELEASE="-O3 -DNDEBUG -march=native -stdlib=libstdc++"
 
     - name: Build
       run: cmake --build build-release --verbose --config Release

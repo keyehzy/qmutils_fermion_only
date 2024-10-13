@@ -6,6 +6,7 @@ add_executable(
     term-test.cpp
     expression-test.cpp
     normal_order-test.cpp
+    basis-test.cpp
 )
 
 target_compile_options(

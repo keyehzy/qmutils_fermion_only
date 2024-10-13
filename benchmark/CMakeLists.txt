@@ -5,6 +5,7 @@ add_executable(
   term-bench.cpp
   expression-bench.cpp
   normal_order-bench.cpp
+  basis-bench.cpp
 )
 
 target_include_directories(
