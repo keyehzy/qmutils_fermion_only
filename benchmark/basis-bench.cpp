@@ -41,27 +41,22 @@ static void BM_BasisContains(benchmark::State& state) {
   state.SetComplexityN(orbitals * particles);
 }
 
-static void BM_BasisIndex(benchmark::State& state) {
+static void BM_BasisIteration(benchmark::State& state) {
   const size_t orbitals = state.range(0);
   const size_t particles =
       std::min(static_cast<size_t>(state.range(1)), 2 * orbitals);
 
   Basis basis(orbitals, particles);
 
-  // Create a state that's guaranteed to be in the basis
-  Basis::operators_type test_state;
-  for (size_t i = 0; i < particles; ++i) {
-    Operator::Spin spin =
-        (i % 2 == 0) ? Operator::Spin::Up : Operator::Spin::Down;
-    test_state.push_back(Operator::creation(spin, i / 2));
-  }
-
   for (auto _ : state) {
-    size_t result = basis.index(test_state);
-    benchmark::DoNotOptimize(result);
+    size_t count = 0;
+    for (const auto& basis_state : basis) {
+      count += basis_state.size();
+    }
+    benchmark::DoNotOptimize(count);
   }
 
-  state.SetComplexityN(orbitals * particles);
+  state.SetComplexityN(basis.size());
 }
 
 BENCHMARK(BM_BasisConstruction)
@@ -74,7 +69,7 @@ BENCHMARK(BM_BasisContains)
     ->Ranges({{1, 8}, {1, 16}})
     ->Complexity();
 
-BENCHMARK(BM_BasisIndex)
+BENCHMARK(BM_BasisIteration)
     ->RangeMultiplier(2)
     ->Ranges({{1, 8}, {1, 16}})
     ->Complexity();
