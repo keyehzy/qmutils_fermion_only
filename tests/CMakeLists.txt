@@ -8,6 +8,7 @@ add_executable(
     normal_order-test.cpp
     basis-test.cpp
     sparse_matrix-test.cpp
+    matrix_elements-test.cpp
 )
 
 target_compile_options(

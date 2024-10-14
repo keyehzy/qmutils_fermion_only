@@ -23,6 +23,7 @@ add_library(
   expression.cpp
   normal_order.cpp
   basis.cpp
+  matrix_elements.cpp
 )
 
 target_include_directories(

@@ -71,7 +71,7 @@ class Basis {
   auto end() const noexcept { return m_index_map.end(); }
 
   auto at(size_t i) const noexcept {
-    QMUTILS_ASSERT(i >= 0 && i < m_index_map.size());
+    QMUTILS_ASSERT(i < m_index_map.size());
     return m_index_map[i];
   }
 
