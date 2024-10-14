@@ -127,6 +127,10 @@ class Expression {
     return rhs;
   }
 
+  const coefficient_type& operator[](const operators_type& ops) {
+    return m_terms[ops];
+  }
+
   size_t size() const { return m_terms.size(); }
 
   const std::unordered_map<operators_type, coefficient_type>& terms() const {
@@ -146,6 +150,8 @@ class Expression {
   std::string to_string() const;
 
   void normalize();
+
+  Expression adjoint() const;
 
  private:
   std::unordered_map<operators_type, coefficient_type> m_terms;

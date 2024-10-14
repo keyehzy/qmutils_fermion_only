@@ -33,4 +33,18 @@ std::string Expression::to_string() const {
   return oss.str();
 }
 
+Expression Expression::adjoint() const {
+  Expression result;
+  for (const auto& [ops, coeff] : terms()) {
+    Term::container_type adjoint_operators;
+    adjoint_operators.reserve(ops.size());
+    for (auto it = ops.rbegin(); it != ops.rend(); ++it) {
+      adjoint_operators.push_back(it->adjoint());
+    }
+    result.m_terms[adjoint_operators] += std::conj(coeff);
+  }
+  result.normalize();
+  return result;
+}
+
 }  // namespace qmutils

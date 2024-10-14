@@ -10,8 +10,16 @@ class ExpressionTest : public ::testing::Test {
   Operator op1 = Operator::creation(Operator::Spin::Up, 0);
   Operator op2 = Operator::annihilation(Operator::Spin::Down, 1);
   Operator op3 = Operator::creation(Operator::Spin::Up, 2);
-  std::complex<float> coeff1{1.0f, 0.0f};
-  std::complex<float> coeff2{0.0f, 2.0f};
+  Expression::coefficient_type coeff1{1.0f, 0.0f};
+  Expression::coefficient_type coeff2{0.0f, 2.0f};
+
+  static Operator c(Operator::Spin spin, uint8_t orbital) {
+    return Operator::creation(spin, orbital);
+  }
+
+  static Operator a(Operator::Spin spin, uint8_t orbital) {
+    return Operator::annihilation(spin, orbital);
+  }
 };
 
 TEST_F(ExpressionTest, DefaultConstructor) {
@@ -64,7 +72,7 @@ TEST_F(ExpressionTest, MultiplicationOperator) {
 
 TEST_F(ExpressionTest, ScalarMultiplication) {
   Expression expr(Term(coeff1, {op1, op2}));
-  std::complex<float> scalar(2.0f, 1.0f);
+  Expression::coefficient_type scalar(2.0f, 1.0f);
   Expression result = expr * scalar;
   EXPECT_EQ(result.size(), 1);
   EXPECT_EQ(result.terms().begin()->second, coeff1 * scalar);
@@ -73,7 +81,7 @@ TEST_F(ExpressionTest, ScalarMultiplication) {
 TEST_F(ExpressionTest, Normalization) {
   Expression expr;
   expr += Term(coeff1, {op1, op1});  // Should be removed (a^2 = 0)
-  expr += Term(std::complex<float>(0.0f, 0.0f),
+  expr += Term(Expression::coefficient_type(0.0f, 0.0f),
                {op2, op3});  // Should be removed (zero coefficient)
   expr += Term(coeff2, {op1, op2});
   expr.normalize();
@@ -110,6 +118,86 @@ TEST_F(ExpressionTest, ZeroExpression) {
   Expression expr2(Term(-coeff1, {op1, op2}));
   Expression result = expr1 + expr2;
   EXPECT_EQ(result.size(), 0);
+}
+
+TEST_F(ExpressionTest, AdjointEmptyExpression) {
+  Expression expr;
+  Expression adj = expr.adjoint();
+  EXPECT_EQ(adj.size(), 0);
+}
+
+TEST_F(ExpressionTest, AdjointSingleTerm) {
+  Expression expr(Term(Expression::coefficient_type(1.0f, 2.0f),
+                       {c(Operator::Spin::Up, 0), a(Operator::Spin::Down, 1)}));
+  Expression adj = expr.adjoint();
+
+  ASSERT_EQ(adj.size(), 1);
+  auto it = adj.terms().begin();
+  EXPECT_EQ(it->second, Expression::coefficient_type(1.0f, -2.0f));
+  ASSERT_EQ(it->first.size(), 2);
+  EXPECT_EQ(it->first[0], c(Operator::Spin::Down, 1));
+  EXPECT_EQ(it->first[1], a(Operator::Spin::Up, 0));
+}
+
+TEST_F(ExpressionTest, AdjointMultipleTerms) {
+  Expression expr;
+  expr += Term(Expression::coefficient_type(1.0f, 1.0f),
+               {c(Operator::Spin::Up, 0), a(Operator::Spin::Down, 1)});
+  expr += Term(Expression::coefficient_type(2.0f, -1.0f),
+               {c(Operator::Spin::Down, 2)});
+
+  Expression adj = expr.adjoint();
+
+  ASSERT_EQ(adj.size(), 2);
+  for (const auto& [ops, coeff] : adj.terms()) {
+    if (ops.size() == 2) {
+      EXPECT_EQ(coeff, Expression::coefficient_type(1.0f, -1.0f));
+      EXPECT_EQ(ops[0], c(Operator::Spin::Down, 1));
+      EXPECT_EQ(ops[1], a(Operator::Spin::Up, 0));
+    } else {
+      EXPECT_EQ(coeff, Expression::coefficient_type(2.0f, 1.0f));
+      ASSERT_EQ(ops.size(), 1);
+      EXPECT_EQ(ops[0], a(Operator::Spin::Down, 2));
+    }
+  }
+}
+
+TEST_F(ExpressionTest, AdjointOfAdjointIsOriginal) {
+  Expression expr;
+  expr += Term(Expression::coefficient_type(1.0f, 1.0f),
+               {c(Operator::Spin::Up, 0), a(Operator::Spin::Down, 1)});
+  expr += Term(Expression::coefficient_type(2.0f, -1.0f),
+               {c(Operator::Spin::Down, 2)});
+
+  Expression adj_adj = expr.adjoint().adjoint();
+
+  EXPECT_EQ(expr, adj_adj);
+}
+
+TEST_F(ExpressionTest, AdjointRealCoefficients) {
+  Expression expr;
+  expr += Term(3.0f, {c(Operator::Spin::Up, 0), a(Operator::Spin::Down, 1)});
+
+  Expression adj = expr.adjoint();
+
+  ASSERT_EQ(adj.size(), 1);
+  auto it = adj.terms().begin();
+  EXPECT_EQ(it->second, Expression::coefficient_type(3.0f, 0.0f));
+  ASSERT_EQ(it->first.size(), 2);
+  EXPECT_EQ(it->first[0], c(Operator::Spin::Down, 1));
+  EXPECT_EQ(it->first[1], a(Operator::Spin::Up, 0));
+}
+
+TEST_F(ExpressionTest, AdjointHermitianOperator) {
+  Expression expr;
+  expr += Term(Expression::coefficient_type(1.0f, 0.0f),
+               {c(Operator::Spin::Up, 0), a(Operator::Spin::Up, 0)});
+  expr += Term(Expression::coefficient_type(1.0f, 0.0f),
+               {c(Operator::Spin::Down, 0), a(Operator::Spin::Down, 0)});
+
+  Expression adj = expr.adjoint();
+
+  EXPECT_EQ(expr, adj);
 }
 
 }  // namespace
