@@ -1,6 +1,7 @@
 #pragma once
 
-#include <unordered_map>
+#include <algorithm>
+#include <unordered_set>
 
 #include "qmutils/assert.h"
 #include "qmutils/operator.h"
@@ -32,6 +33,9 @@ class Basis {
     QMUTILS_ASSERT(particles <= 2 * orbitals);
     m_index_map.reserve(qmutils_choose(2 * orbitals, particles));
     generate_basis();
+    QMUTILS_ASSERT(m_index_map.size() ==
+                   qmutils_choose(2 * orbitals, particles));
+    std::sort(m_index_map.begin(), m_index_map.end());
   }
 
   Basis(const Basis&) = default;
@@ -53,18 +57,14 @@ class Basis {
   bool operator!=(const Basis& other) const { return !(*this == other); }
 
   bool contains(const operators_type& value) const {
-    return m_index_map.find(value) != m_index_map.end();
+    auto it = std::lower_bound(m_index_map.begin(), m_index_map.end(), value);
+    return it != m_index_map.end() && *it == value;
   }
 
   void insert(const operators_type& value) {
     QMUTILS_ASSERT(!contains(value));
-    m_index_map[value] = m_index_map.size() - 1;
-  }
-
-  size_t index(const operators_type& value) const {
-    QMUTILS_ASSERT(contains(value));
-    auto it = m_index_map.find(value);
-    return it->second;
+    auto it = std::lower_bound(m_index_map.begin(), m_index_map.end(), value);
+    m_index_map.insert(it, value);
   }
 
   auto begin() const noexcept { return m_index_map.begin(); }
@@ -78,7 +78,7 @@ class Basis {
 
   size_t m_orbitals;
   size_t m_particles;
-  std::unordered_map<operators_type, size_t> m_index_map;
+  std::vector<operators_type> m_index_map;
 };
 
 }  // namespace qmutils

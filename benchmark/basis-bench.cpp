@@ -3,14 +3,14 @@
 #include <algorithm>
 
 #include "qmutils/basis.h"
+#include "qmutils/utils.h"
 
 namespace qmutils {
 namespace {
 
 static void BM_BasisConstruction(benchmark::State& state) {
   const size_t orbitals = state.range(0);
-  const size_t particles =
-      std::min(static_cast<size_t>(state.range(1)), 2 * orbitals);
+  const size_t particles = state.range(1);
 
   for (auto _ : state) {
     Basis basis(orbitals, particles);
@@ -22,8 +22,7 @@ static void BM_BasisConstruction(benchmark::State& state) {
 
 static void BM_BasisContains(benchmark::State& state) {
   const size_t orbitals = state.range(0);
-  const size_t particles =
-      std::min(static_cast<size_t>(state.range(1)), 2 * orbitals);
+  const size_t particles = state.range(1);
 
   Basis basis(orbitals, particles);
 
@@ -43,8 +42,7 @@ static void BM_BasisContains(benchmark::State& state) {
 
 static void BM_BasisIteration(benchmark::State& state) {
   const size_t orbitals = state.range(0);
-  const size_t particles =
-      std::min(static_cast<size_t>(state.range(1)), 2 * orbitals);
+  const size_t particles = state.range(1);
 
   Basis basis(orbitals, particles);
 
@@ -59,19 +57,64 @@ static void BM_BasisIteration(benchmark::State& state) {
   state.SetComplexityN(basis.size());
 }
 
+Term::container_type generate_random_operators(size_t orbitals,
+                                               size_t particles) {
+  static std::random_device rd;
+  static std::mt19937 gen(rd());
+  std::uniform_int_distribution<> orbital_dist(0, orbitals - 1);
+  std::uniform_int_distribution<> spin_dist(0, 1);
+
+  Term::container_type operators;
+  operators.reserve(particles);
+
+  for (size_t i = 0; i < particles; ++i) {
+    Operator::Spin spin = static_cast<Operator::Spin>(spin_dist(gen));
+    uint8_t orbital = static_cast<uint8_t>(orbital_dist(gen));
+    operators.push_back(Operator::creation(spin, orbital));
+  }
+
+  std::sort(operators.begin(), operators.end());
+  operators.erase(std::unique(operators.begin(), operators.end()),
+                  operators.end());
+
+  return operators;
+}
+
+static void BM_BasisInsert(benchmark::State& state) {
+  const size_t orbitals = state.range(0);
+  const size_t particles = state.range(1);
+
+  Basis basis(0, 0);
+
+  for (auto _ : state) {
+    state.PauseTiming();
+    auto operators = generate_random_operators(orbitals, particles);
+    state.ResumeTiming();
+
+    basis.insert(operators);
+  }
+
+  state.SetComplexityN(orbitals * particles);
+}
+
 BENCHMARK(BM_BasisConstruction)
-    ->RangeMultiplier(2)
-    ->Ranges({{1, 8}, {1, 16}})
+    ->ArgsProduct({benchmark::CreateRange(1, 8, /*multi=*/2),
+                   benchmark::CreateDenseRange(1, 16, /*step=*/2)})
     ->Complexity();
 
 BENCHMARK(BM_BasisContains)
-    ->RangeMultiplier(2)
-    ->Ranges({{1, 8}, {1, 16}})
+    ->ArgsProduct({benchmark::CreateRange(1, 8, /*multi=*/2),
+                   benchmark::CreateDenseRange(1, 16, /*step=*/2)})
     ->Complexity();
 
 BENCHMARK(BM_BasisIteration)
-    ->RangeMultiplier(2)
-    ->Ranges({{1, 8}, {1, 16}})
+    ->ArgsProduct({benchmark::CreateRange(1, 8, /*multi=*/2),
+                   benchmark::CreateDenseRange(1, 16, /*step=*/2)})
+    ->Complexity();
+
+BENCHMARK(BM_BasisInsert)
+    ->ArgsProduct({benchmark::CreateRange(1, 8, /*multi=*/2),
+                   benchmark::CreateDenseRange(1, 16, /*step=*/2)})
     ->Complexity();
 
 }  // namespace

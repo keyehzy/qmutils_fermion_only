@@ -11,7 +11,7 @@ void Basis::generate_basis() {
 void Basis::generate_combinations(operators_type& current, size_t first_orbital,
                                   size_t depth) {
   if (depth == m_particles) {
-    insert(current);
+    m_index_map.push_back(current);
     return;
   }
 

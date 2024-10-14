@@ -49,10 +49,6 @@ TEST_F(BasisTest, ContainsAndIndex) {
   EXPECT_TRUE(basis.contains(state1));
   EXPECT_TRUE(basis.contains(state2));
   EXPECT_TRUE(basis.contains(state3));
-
-  EXPECT_NE(basis.index(state1), basis.index(state2));
-  EXPECT_NE(basis.index(state1), basis.index(state3));
-  EXPECT_NE(basis.index(state2), basis.index(state3));
 }
 
 TEST_F(BasisTest, DoesNotContain) {
