@@ -102,6 +102,20 @@ TEST_F(NormalOrderTest, MultipleNonCommutingPairs) {
   EXPECT_EQ(result, expected);
 }
 
+TEST_F(NormalOrderTest, MultipleNonCommutingPairs2) {
+  Term term(42.0f, {a(Operator::Spin::Up, 1), c(Operator::Spin::Up, 1),
+                    a(Operator::Spin::Up, 0), c(Operator::Spin::Up, 0)});
+  Expression result = orderer.normal_order(term);
+  Expression expected;
+  expected += Term(42.0f, {});
+  expected -= Term(42.0f, {c(Operator::Spin::Up, 0), a(Operator::Spin::Up, 0)});
+  expected -= Term(42.0f, {c(Operator::Spin::Up, 1), a(Operator::Spin::Up, 1)});
+  expected -= Term(42.0f, {c(Operator::Spin::Up, 0), c(Operator::Spin::Up, 1),
+                           a(Operator::Spin::Up, 0), a(Operator::Spin::Up, 1)});
+
+  EXPECT_EQ(result, expected);
+}
+
 TEST_F(NormalOrderTest, EmptyTerm) {
   Term term;
   Expression result = orderer.normal_order(term);
