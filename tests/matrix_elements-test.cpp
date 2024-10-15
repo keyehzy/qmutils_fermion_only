@@ -48,7 +48,7 @@ TEST_F(MatrixElementsTest, SparseMatrixComputationOffDiagonal2) {
   EXPECT_EQ(matrix(1, 1), Expression::coefficient_type(0, 0));
 }
 
-TEST_F(MatrixElementsTest, DISABLED_SparseMatrixComputationOffDiagonal3) {
+TEST_F(MatrixElementsTest, SparseMatrixComputationOffDiagonal3) {
   Basis basis(2, 1);  // 2 orbitals, 1 particle
 
   Expression H;
