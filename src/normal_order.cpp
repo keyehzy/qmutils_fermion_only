@@ -33,7 +33,8 @@ Expression NormalOrderer::normal_order_iterative(const operators_type& ops) {
 
     if (auto it = m_cache.find(current); it != m_cache.end()) {
       m_cache_hits++;
-      return original_phase * it->second;
+      result += original_phase * it->second;
+      continue;
     }
     m_cache_misses++;
 
