@@ -6,6 +6,7 @@ add_executable(
   expression-bench.cpp
   normal_order-bench.cpp
   basis-bench.cpp
+  sparse_matrix-bench.cpp
 )
 
 target_include_directories(

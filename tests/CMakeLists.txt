@@ -7,6 +7,7 @@ add_executable(
     expression-test.cpp
     normal_order-test.cpp
     basis-test.cpp
+    sparse_matrix-test.cpp
 )
 
 target_compile_options(
