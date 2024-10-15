@@ -21,22 +21,24 @@ Expression NormalOrderer::normal_order_iterative(const operators_type& ops) {
   m_queue.emplace(ops, 1.0);
 
   while (!m_queue.empty()) {
-    auto [current, original_phase] = m_queue.top();
+    auto [current, phase] = m_queue.top();
     m_queue.pop();
 
     if (current.size() < 2) {
-      result += Term(original_phase, current);
+      result += Term(phase, current);
       continue;
     }
 
-    coefficient_type phase = 1.0;
-
-    if (auto it = m_cache.find(current); it != m_cache.end()) {
+    auto ops_key = std::hash<operators_type>{}(current);
+    if (auto it = m_cache.find(ops_key); it != m_cache.end()) {
       m_cache_hits++;
-      result += original_phase * it->second;
+      result += phase * it->second;
       continue;
     }
     m_cache_misses++;
+
+    bool is_sorted = true;
+    Expression partial;
 
     for (size_t i = 1; i < current.size(); ++i) {
       size_t j = i;
@@ -46,27 +48,27 @@ Expression NormalOrderer::normal_order_iterative(const operators_type& ops) {
           phase *= -1.0;
           --j;
         } else {
+          is_sorted = false;
           operators_type contracted(current);
           contracted.erase(contracted.begin() + j - 1,
                            contracted.begin() + j + 1);
-          m_queue.emplace(std::move(contracted), phase * original_phase);
+          m_queue.emplace(std::move(contracted), phase);
 
           operators_type swapped(current);
           std::swap(swapped[j - 1], swapped[j]);
-          m_queue.emplace(std::move(swapped), -phase * original_phase);
-          goto end;
+          m_queue.emplace(std::move(swapped), -phase);
+          break;
         }
       }
+      if (!is_sorted) break;
     }
 
-    {
-      Expression partial = Expression(Term(phase * original_phase, current));
-      m_cache[current] = partial;
-      result += partial;
+    if (is_sorted) {
+      partial = Expression(Term(phase, current));
     }
 
-  end:  // End of the loop
-    continue;
+    m_cache[ops_key] = partial;
+    result += partial;
   }
 
   return result;
@@ -77,14 +79,14 @@ Expression NormalOrderer::normal_order_recursive(operators_type ops) {
     return Expression(Term(ops));
   }
 
-  coefficient_type phase = 1.0;
-
-  if (auto it = m_cache.find(ops); it != m_cache.end()) {
+  auto ops_key = std::hash<operators_type>{}(ops);
+  if (auto it = m_cache.find(ops_key); it != m_cache.end()) {
     m_cache_hits++;
     return it->second;
   }
   m_cache_misses++;
 
+  coefficient_type phase = 1.0;
   for (size_t i = 1; i < ops.size(); ++i) {
     size_t j = i;
     while (j > 0 && ops[j] < ops[j - 1]) {
@@ -94,14 +96,14 @@ Expression NormalOrderer::normal_order_recursive(operators_type ops) {
         --j;
       } else {
         Expression result = phase * handle_non_commuting(ops, j - 1);
-        m_cache[ops] = result;
+        m_cache[ops_key] = result;
         return result;
       }
     }
   }
 
   Expression result(Term(phase, ops));
-  m_cache[ops] = result;
+  m_cache[ops_key] = result;
   return result;
 }
 

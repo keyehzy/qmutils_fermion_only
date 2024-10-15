@@ -196,13 +196,25 @@ static void BM_NormalOrderMomentumSpinConservingN(benchmark::State& state) {
   state.SetComplexityN(n);
 }
 
-BENCHMARK(BM_NormalOrderRandomTerm)->Range(1, 1 << 7)->Complexity();
+BENCHMARK(BM_NormalOrderRandomTerm)
+    ->RangeMultiplier(2)
+    ->Range(1, 1 << 7)
+    ->Complexity();
 
-BENCHMARK(BM_NormalOrderNonCommutingTerm)->Range(1, 1 << 10)->Complexity();
+BENCHMARK(BM_NormalOrderNonCommutingTerm)
+    ->RangeMultiplier(2)
+    ->Range(1, 1 << 7)
+    ->Complexity();
 
-BENCHMARK(BM_NormalOrderCommutingTerm)->Range(1, 1 << 10)->Complexity();
+BENCHMARK(BM_NormalOrderCommutingTerm)
+    ->RangeMultiplier(2)
+    ->Range(1, 1 << 10)
+    ->Complexity();
 
-BENCHMARK(BM_NormalOrderExpression)->Range(1, 1 << 7)->Complexity();
+BENCHMARK(BM_NormalOrderExpression)
+    ->RangeMultiplier(2)
+    ->Range(1, 1 << 6)
+    ->Complexity();
 
 BENCHMARK(BM_NormalOrderMomentumConserving)
     ->RangeMultiplier(2)

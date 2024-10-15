@@ -25,7 +25,7 @@ class NormalOrderer {
   Expression normal_order_recursive(operators_type ops);
   Expression handle_non_commuting(const operators_type& ops, size_t index);
 
-  std::unordered_map<operators_type, Expression> m_cache;
+  std::unordered_map<size_t, Expression> m_cache;
 
   struct QueueElement {
     operators_type ops;
