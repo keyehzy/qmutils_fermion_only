@@ -159,15 +159,10 @@ Term generate_momentum_spin_conserving_term(uint8_t n, uint8_t nk) {
   std::vector<Operator> creation_ops;
   std::vector<Operator> annihilation_ops;
 
-  int total_momentum = 0;
-  int total_spin = 0;
-
   for (uint8_t i = 0; i < n; ++i) {
     uint8_t momentum = momentum_dist(gen);
     Operator::Spin spin = static_cast<Operator::Spin>(spin_dist(gen));
     creation_ops.push_back(Operator::creation(spin, momentum));
-    total_momentum = (total_momentum + momentum) % nk;
-    total_spin += (spin == Operator::Spin::Up) ? 1 : -1;
   }
 
   for (auto& op : creation_ops) {
