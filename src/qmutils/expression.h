@@ -153,6 +153,8 @@ class Expression {
 
   Expression adjoint() const;
 
+  Expression flip_spin() const;
+
  private:
   std::unordered_map<operators_type, coefficient_type> m_terms;
 };

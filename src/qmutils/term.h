@@ -77,7 +77,9 @@ class Term {
 
   bool operator!=(const Term& other) const { return !(*this == other); }
 
-  Term adjoint() const noexcept;
+  Term adjoint() const;
+
+  Term flip_spin() const;
 
   std::string to_string() const;
 

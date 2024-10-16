@@ -200,5 +200,41 @@ TEST_F(ExpressionTest, AdjointHermitianOperator) {
   EXPECT_EQ(expr, adj);
 }
 
+TEST_F(ExpressionTest, ExpressionFlipSpin) {
+  Expression expr;
+  expr += Term({1.0f, 0.0f},
+               {c(Operator::Spin::Up, 0), a(Operator::Spin::Down, 1)});
+  expr += Term({0.0f, 1.0f}, {c(Operator::Spin::Down, 2)});
+
+  Expression flipped = expr.flip_spin();
+
+  ASSERT_EQ(flipped.size(), 2);
+  for (const auto& [ops, coeff] : flipped.terms()) {
+    if (ops.size() == 2) {
+      EXPECT_EQ(coeff, Expression::coefficient_type(1.0f, 0.0f));
+      EXPECT_EQ(ops[0], c(Operator::Spin::Down, 0));
+      EXPECT_EQ(ops[1], a(Operator::Spin::Up, 1));
+    } else {
+      EXPECT_EQ(coeff, Expression::coefficient_type(0.0f, 1.0f));
+      ASSERT_EQ(ops.size(), 1);
+      EXPECT_EQ(ops[0], c(Operator::Spin::Up, 2));
+    }
+  }
+}
+
+TEST_F(ExpressionTest, DoubleFlipIsIdentity) {
+  Operator op = c(Operator::Spin::Up, 0);
+  EXPECT_EQ(op.flip_spin().flip_spin(), op);
+
+  Term term({1.0f, 0.0f},
+            {c(Operator::Spin::Up, 0), a(Operator::Spin::Down, 1)});
+  EXPECT_EQ(term.flip_spin().flip_spin(), term);
+
+  Expression expr;
+  expr += Term({1.0f, 0.0f},
+               {c(Operator::Spin::Up, 0), a(Operator::Spin::Down, 1)});
+  expr += Term({0.0f, 1.0f}, {c(Operator::Spin::Down, 2)});
+  EXPECT_EQ(expr.flip_spin().flip_spin(), expr);
+}
 }  // namespace
 }  // namespace qmutils

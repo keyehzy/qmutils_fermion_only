@@ -7,7 +7,7 @@
 
 namespace qmutils {
 
-Term Term::adjoint() const noexcept {
+Term Term::adjoint() const {
   container_type adjoint_operators;
   adjoint_operators.reserve(m_operators.size());
 
@@ -16,6 +16,15 @@ Term Term::adjoint() const noexcept {
   }
 
   return Term(std::conj(m_coefficient), std::move(adjoint_operators));
+}
+
+Term Term::flip_spin() const {
+  container_type flipped_operators;
+  flipped_operators.reserve(m_operators.size());
+  for (const auto& op : m_operators) {
+    flipped_operators.push_back(op.flip_spin());
+  }
+  return Term(m_coefficient, std::move(flipped_operators));
 }
 
 std::string Term::to_string() const {

@@ -64,13 +64,20 @@ class Operator {
                     static_cast<Spin>(data_.spin), data_.orbital);
   }
 
+  [[nodiscard]] constexpr Operator flip_spin() const noexcept {
+    return Operator(type(), spin() == Spin::Up ? Spin::Down : Spin::Up,
+                    orbital());
+  }
+
   std::string to_string() const;
 
-  static constexpr Operator creation(Spin spin, uint8_t orbital) noexcept {
+  [[nodiscard]] static constexpr Operator creation(Spin spin,
+                                                   uint8_t orbital) noexcept {
     return Operator(Type::Creation, spin, orbital);
   }
 
-  static constexpr Operator annihilation(Spin spin, uint8_t orbital) noexcept {
+  [[nodiscard]] static constexpr Operator annihilation(
+      Spin spin, uint8_t orbital) noexcept {
     return Operator(Type::Annihilation, spin, orbital);
   }
 

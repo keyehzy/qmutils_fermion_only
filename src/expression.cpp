@@ -47,4 +47,12 @@ Expression Expression::adjoint() const {
   return result;
 }
 
+Expression Expression::flip_spin() const {
+  Expression result;
+  for (const auto& [ops, coeff] : m_terms) {
+    Term flipped_term(coeff, ops);
+    result += flipped_term.flip_spin();
+  }
+  return result;
+}
 }  // namespace qmutils

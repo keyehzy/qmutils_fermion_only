@@ -149,5 +149,15 @@ TEST_F(TermTest, AdjointOfAdjointIsOriginal) {
   EXPECT_EQ(original, adjoint_of_adjoint);
 }
 
+TEST_F(TermTest, TermFlipSpin) {
+  Term term({1.0f, 0.0f}, {Operator::creation(Operator::Spin::Up, 0),
+                           Operator::annihilation(Operator::Spin::Down, 1)});
+  Term flipped = term.flip_spin();
+
+  EXPECT_EQ(flipped.coefficient(), term.coefficient());
+  ASSERT_EQ(flipped.size(), 2);
+  EXPECT_EQ(flipped[0], Operator::creation(Operator::Spin::Down, 0));
+  EXPECT_EQ(flipped[1], Operator::annihilation(Operator::Spin::Up, 1));
+}
 }  // namespace
 }  // namespace qmutils

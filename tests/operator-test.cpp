@@ -69,5 +69,12 @@ TEST(OperatorTest, DataRepresentationAndHashing) {
   EXPECT_NE(hasher(op1), hasher(op3));
 }
 
+TEST(OperatorTest, OperatorFlipSpin) {
+  Operator op_up = Operator::creation(Operator::Spin::Up, 0);
+  Operator op_down = Operator::annihilation(Operator::Spin::Down, 1);
+
+  EXPECT_EQ(op_up.flip_spin(), Operator::creation(Operator::Spin::Down, 0));
+  EXPECT_EQ(op_down.flip_spin(), Operator::annihilation(Operator::Spin::Up, 1));
+}
 }  // namespace
 }  // namespace qmutils
