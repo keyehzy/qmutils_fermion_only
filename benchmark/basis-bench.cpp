@@ -10,7 +10,8 @@ namespace {
 
 static void BM_BasisConstruction(benchmark::State& state) {
   const size_t orbitals = state.range(0);
-  const size_t particles = state.range(1);
+  const size_t unchecked_particles = state.range(1);
+  const size_t particles = std::min(unchecked_particles, 2 * orbitals);
 
   for (auto _ : state) {
     Basis basis(orbitals, particles);
@@ -22,7 +23,8 @@ static void BM_BasisConstruction(benchmark::State& state) {
 
 static void BM_BasisContains(benchmark::State& state) {
   const size_t orbitals = state.range(0);
-  const size_t particles = state.range(1);
+  const size_t unchecked_particles = state.range(1);
+  const size_t particles = std::min(unchecked_particles, 2 * orbitals);
 
   Basis basis(orbitals, particles);
 
@@ -42,7 +44,8 @@ static void BM_BasisContains(benchmark::State& state) {
 
 static void BM_BasisIteration(benchmark::State& state) {
   const size_t orbitals = state.range(0);
-  const size_t particles = state.range(1);
+  const size_t unchecked_particles = state.range(1);
+  const size_t particles = std::min(unchecked_particles, 2 * orbitals);
 
   Basis basis(orbitals, particles);
 
@@ -57,8 +60,8 @@ static void BM_BasisIteration(benchmark::State& state) {
   state.SetComplexityN(basis.size());
 }
 
-Term::container_type generate_random_operators(size_t orbitals,
-                                               size_t particles) {
+Term::container_type generate_valid_operators(size_t orbitals,
+                                              size_t particles) {
   static std::random_device rd;
   static std::mt19937 gen(rd());
   std::uniform_int_distribution<> orbital_dist(0, orbitals - 1);
@@ -67,31 +70,35 @@ Term::container_type generate_random_operators(size_t orbitals,
   Term::container_type operators;
   operators.reserve(particles);
 
-  for (size_t i = 0; i < particles; ++i) {
+  while (operators.size() < particles) {
     Operator::Spin spin = static_cast<Operator::Spin>(spin_dist(gen));
     uint8_t orbital = static_cast<uint8_t>(orbital_dist(gen));
-    operators.push_back(Operator::creation(spin, orbital));
+    Operator op = Operator::creation(spin, orbital);
+
+    if (std::find(operators.begin(), operators.end(), op) == operators.end()) {
+      operators.push_back(op);
+    }
   }
 
   std::sort(operators.begin(), operators.end());
-  operators.erase(std::unique(operators.begin(), operators.end()),
-                  operators.end());
-
   return operators;
 }
 
 static void BM_BasisInsert(benchmark::State& state) {
   const size_t orbitals = state.range(0);
-  const size_t particles = state.range(1);
+  const size_t particles =
+      std::min(static_cast<size_t>(state.range(1)), 2 * orbitals);
 
   Basis basis(0, 0);
 
   for (auto _ : state) {
     state.PauseTiming();
-    auto operators = generate_random_operators(orbitals, particles);
+    auto operators = generate_valid_operators(orbitals, particles);
     state.ResumeTiming();
 
-    basis.insert(operators);
+    if (!basis.contains(operators)) {
+      basis.insert(operators);
+    }
   }
 
   state.SetComplexityN(orbitals * particles);
