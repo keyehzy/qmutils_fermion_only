@@ -13,6 +13,7 @@ target_include_directories(
   qmutils-bench
   PRIVATE
   ${CMAKE_CURRENT_SOURCE_DIR}
+  ${XXHASHCT_INCLUDE_DIR}
 )
 
 target_link_libraries(
@@ -21,4 +22,5 @@ target_link_libraries(
   benchmark::benchmark_main
   pthread
   qmutils
+  xxhashct
 )
