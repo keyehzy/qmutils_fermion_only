@@ -5,13 +5,13 @@
 namespace qmutils {
 
 Expression NormalOrderer::normal_order(const Term& term) {
-  return term.coefficient() * normal_order_iterative(term.operators());
+  return term.coefficient() * normal_order_recursive(term.operators());
 }
 
 Expression NormalOrderer::normal_order(const Expression& expr) {
   Expression result;
   for (const auto& [ops, coeff] : expr.terms()) {
-    result += coeff * normal_order_iterative(ops);
+    result += coeff * normal_order_recursive(ops);
   }
   return result;
 }
@@ -39,7 +39,6 @@ Expression NormalOrderer::normal_order_iterative(const operators_type& ops) {
     m_cache_misses++;
 
     bool is_sorted = true;
-    Expression partial;
 
     for (size_t i = 1; i < current.size(); ++i) {
       size_t j = i;
@@ -63,13 +62,11 @@ Expression NormalOrderer::normal_order_iterative(const operators_type& ops) {
       }
       if (!is_sorted) break;
     }
-
     if (is_sorted) {
-      partial = Expression(Term(phase, current));
+      Expression partial(Term(phase, current));
+      m_cache.put(ops_key, partial);
+      result += partial;
     }
-
-    m_cache.put(ops_key, partial);
-    result += partial;
   }
 
   return result;
