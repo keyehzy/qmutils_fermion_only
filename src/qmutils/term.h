@@ -85,10 +85,9 @@ class Term {
 
   static Term creation(Operator::Spin spin, uint8_t orbital);
   static Term annihilation(Operator::Spin spin, uint8_t orbital);
-  static Term number(Operator::Spin spin, uint8_t orbital);
-  static Term spin_flip(uint8_t orbital);
-  static Term hopping(uint8_t from_orbital, uint8_t to_orbital,
-                      Operator::Spin spin);
+  static Term one_body(Operator::Spin spin1, uint8_t orbital1,
+                       Operator::Spin spin2, uint8_t orbital2);
+  static Term density(Operator::Spin spin, uint8_t orbital);
 
  private:
   coefficient_type m_coefficient;

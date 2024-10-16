@@ -1,4 +1,4 @@
-name: Benchmarks
+name: Examples
 
 on: [push]
 
@@ -25,31 +25,15 @@ jobs:
         cmake -S . -B build-release -G Ninja \
         -DCMAKE_BUILD_TYPE=Release \
         -DBUILD_TESTING=NO \
-        -DBUILD_BENCHMARK=YES \
-        -DBUILD_EXAMPLES=NO \
+        -DBUILD_BENCHMARK=NO \
+        -DBUILD_EXAMPLES=YES \
         -DCMAKE_C_COMPILER=clang \
         -DCMAKE_CXX_COMPILER=clang++ \
         -DCMAKE_CXX_FLAGS="-Wall -Wextra -Werror -Wpedantic" \
-        -DCMAKE_CXX_FLAGS_RELEASE="-O3 -DNDEBUG -march=native -stdlib=libstdc++"
+        -DCMAKE_CXX_FLAGS_RELEASE="-O2 -stdlib=libstdc++"
 
     - name: Build
       run: cmake --build build-release --verbose --config Release
 
-    - name: Run benchmark
-      run: |
-        ./build-release/benchmark/qmutils-bench --benchmark_format=json | tee benchmark_result.json
-
-    - name: Download previous benchmark data
-      uses: actions/cache@v4
-      with:
-        path: ./cache
-        key: ${{ runner.os }}-benchmark
-
-    - name: Store benchmark result
-      uses: benchmark-action/github-action-benchmark@v1
-      with:
-        name: Benchmark
-        tool: 'googlecpp'
-        output-file-path: benchmark_result.json
-        external-data-json-path: ./cache/benchmark_result.json
-        fail-on-alert: true
+    - name: Run examples
+      run: find ./build-release/examples/ -maxdepth 1 -type f -executable -exec {} \;

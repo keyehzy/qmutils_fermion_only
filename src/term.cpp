@@ -3,8 +3,6 @@
 #include <numeric>
 #include <sstream>
 
-#include "qmutils/assert.h"
-
 namespace qmutils {
 
 Term Term::adjoint() const {
@@ -44,21 +42,14 @@ Term Term::annihilation(Operator::Spin spin, uint8_t orbital) {
   return Term(1.0f, {Operator::annihilation(spin, orbital)});
 }
 
-Term Term::number(Operator::Spin spin, uint8_t orbital) {
-  return Term(1.0f, {Operator::creation(spin, orbital),
-                     Operator::annihilation(spin, orbital)});
+Term Term::one_body(Operator::Spin spin1, uint8_t orbital1,
+                    Operator::Spin spin2, uint8_t orbital2) {
+  return Term(1.0f, {Operator::creation(spin1, orbital1),
+                     Operator::annihilation(spin2, orbital2)});
 }
 
-Term Term::spin_flip(uint8_t orbital) {
-  return Term(1.0f, {Operator::creation(Operator::Spin::Up, orbital),
-                     Operator::annihilation(Operator::Spin::Down, orbital)});
-}
-
-Term Term::hopping(uint8_t from_orbital, uint8_t to_orbital,
-                   Operator::Spin spin) {
-  QMUTILS_ASSERT(from_orbital != to_orbital);
-  return Term(1.0f, {Operator::creation(spin, to_orbital),
-                     Operator::annihilation(spin, from_orbital)});
+Term Term::density(Operator::Spin spin, uint8_t orbital) {
+  return Term::one_body(spin, orbital, spin, orbital);
 }
 
 }  // namespace qmutils

@@ -1,0 +1,43 @@
+cmake_minimum_required(VERSION 3.14)
+
+function(add_example example_file)
+  get_filename_component(
+    example_name
+    ${example_file}
+    NAME_WE
+  )
+
+  add_executable(
+    ${example_name}
+    ${example_file}
+  )
+
+  target_compile_options(
+    ${example_name}
+    PRIVATE
+    "${QMUTILS_CXX_COMPILER_OPTIONS}"
+  )
+
+  target_include_directories(
+    ${example_name}
+    PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${XXHASHCT_INCLUDE_DIR}
+  )
+
+  target_link_libraries(
+    ${example_name}
+    PRIVATE
+    qmutils
+    xxhashct
+  )
+
+endfunction()
+
+file(GLOB EXAMPLE_FILES
+  hubbard_1d.cpp
+)
+
+foreach(EXAMPLE_FILE ${EXAMPLE_FILES})
+  add_example(${EXAMPLE_FILE})
+endforeach()

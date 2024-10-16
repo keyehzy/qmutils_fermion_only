@@ -155,6 +155,9 @@ class Expression {
 
   Expression flip_spin() const;
 
+  static Expression hopping(uint8_t from_orbital, uint8_t to_orbital,
+                            Operator::Spin spin);
+
  private:
   std::unordered_map<operators_type, coefficient_type> m_terms;
 };
