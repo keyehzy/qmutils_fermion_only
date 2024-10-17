@@ -18,7 +18,6 @@ function(add_example example_file)
     ${example_name}
     PRIVATE
     ${QMUTILS_CXX_COMPILER_OPTIONS}
-    ${ARMADILLO_INCLUDE_DIRS}
   )
 
   target_include_directories(
@@ -26,6 +25,7 @@ function(add_example example_file)
     PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${XXHASHCT_INCLUDE_DIR}
+    ${ARMADILLO_INCLUDE_DIRS}
   )
 
   target_link_libraries(

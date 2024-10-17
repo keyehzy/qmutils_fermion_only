@@ -20,8 +20,8 @@ class Hubbard1DModel {
     qmutils::Expression H;
 
     // Hopping terms
-    for (size_t i = 0; i < m_sites; ++i) {
-      size_t j = (i + 1) % m_sites;  // Periodic boundary conditions
+    for (uint8_t i = 0; i < m_sites; ++i) {
+      uint8_t j = (i + 1) % m_sites;  // Periodic boundary conditions
       H += -m_t *
            qmutils::Expression::hopping(i, j, qmutils::Operator::Spin::Up);
       H += -m_t *
@@ -29,7 +29,7 @@ class Hubbard1DModel {
     }
 
     // Mean-field interaction terms
-    for (size_t i = 0; i < m_sites; ++i) {
+    for (uint8_t i = 0; i < m_sites; ++i) {
       H += m_U * down_occupations[i] *
            qmutils::Term::density(qmutils::Operator::Spin::Up, i);
       H += m_U * up_occupations[i] *
@@ -61,7 +61,7 @@ class MeanFieldSolver {
     std::vector<float> up_occupations = initial_up_occupations;
     std::vector<float> down_occupations = initial_down_occupations;
     int iteration = 0;
-    float diff;
+    float difference;
 
     // Construct single-particle basis
     auto basis = qmutils::Basis(model.sites(), 1);
@@ -76,9 +76,6 @@ class MeanFieldSolver {
                 << compute_total_magnetization(up_occupations, down_occupations)
                 << std::endl;
 
-      std::vector<float> new_up_occupations(model.sites());
-      std::vector<float> new_down_occupations(model.sites());
-
       // Construct mean-field Hamiltonian
       auto H = model.construct_hamiltonian(up_occupations, down_occupations);
 
@@ -89,17 +86,19 @@ class MeanFieldSolver {
       arma::eig_sym(eigenvalues, eigenvectors, mat);
 
       // Calculate new occupations
+      std::vector<float> new_up_occupations(model.sites());
+      std::vector<float> new_down_occupations(model.sites());
       calculate_occupations(eigenvalues, eigenvectors, model.sites(), filling,
                             temperature, new_up_occupations,
                             new_down_occupations);
 
       // Check for convergence
-      diff = 0.0;
+      difference = 0.0;
       for (size_t i = 0; i < new_up_occupations.size(); ++i) {
-        diff += std::abs(new_up_occupations[i] - up_occupations[i]);
-        diff += std::abs(new_down_occupations[i] - down_occupations[i]);
+        difference += std::abs(new_up_occupations[i] - up_occupations[i]);
+        difference += std::abs(new_down_occupations[i] - down_occupations[i]);
       }
-      std::cout << "diff: " << diff << std::endl;
+      std::cout << "Difference: " << difference << std::endl;
 
       // Update occupations
       for (size_t i = 0; i < model.sites(); ++i) {
@@ -110,7 +109,7 @@ class MeanFieldSolver {
       }
 
       iteration++;
-    } while (diff > tolerance && iteration < max_iterations);
+    } while (difference > tolerance && iteration < max_iterations);
 
     if (iteration == max_iterations) {
       std::cout << "Warning: Maximum iterations reached without convergence."
@@ -139,7 +138,7 @@ class MeanFieldSolver {
 
     for (size_t j = 0; j < total_states; ++j) {
       float occupation =
-          fermi_distr(eigenvalues(j), chemical_potential, temperature);
+          fermi_distribution(eigenvalues(j), chemical_potential, temperature);
       for (size_t i = 0; i < sites; ++i) {
         size_t up_index = i;
         size_t down_index = i + sites;
@@ -152,20 +151,18 @@ class MeanFieldSolver {
   }
 
   static float find_chemical_potential(const arma::fvec& eigenvalues,
-                                       float target_filling,
-                                       float temperature) {
+                                       float target_filling, float temperature,
+                                       float tolerance = 3e-4f) {
     float low = eigenvalues.min();
     float high = eigenvalues.max();
-    float mid, current_filling;
-    const float tolerance = 3e-4f;
 
     while (high - low > tolerance) {
-      mid = (low + high) / 2;
-      current_filling = 0.0f;
+      float mid = (low + high) / 2;
+      float current_filling = 0.0f;
       for (float e : eigenvalues) {
-        current_filling += fermi_distr(e, mid, temperature);
+        current_filling += fermi_distribution(e, mid, temperature);
       }
-      current_filling /= eigenvalues.n_elem;
+      current_filling /= static_cast<float>(eigenvalues.n_elem);
 
       if (current_filling < target_filling) {
         low = mid;
@@ -174,16 +171,16 @@ class MeanFieldSolver {
       }
     }
 
-    return mid;
+    return (low + high) / 2;
   }
 
-  static float fermi_distr(float energy, float chemical_potential,
-                           float temperature) {
+  static float fermi_distribution(float energy, float chemical_potential,
+                                  float temperature) {
     return 1.0f /
            (1.0f + std::exp((energy - chemical_potential) / temperature));
   }
 
-  static double compute_total_magnetization(
+  static float compute_total_magnetization(
       const std::vector<float>& up_occupations,
       const std::vector<float>& down_occupations) {
     float total_magnetization = 0.0;
@@ -196,7 +193,7 @@ class MeanFieldSolver {
 };
 
 int main() {
-  size_t sites = 10;
+  size_t sites = 16;
   float t = 1.0f;
   float U = 4.0f;
   float filling = 0.25f;
