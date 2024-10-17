@@ -1,5 +1,6 @@
 #pragma once
 
+#include <bit>
 #include <cstdint>
 #include <string>
 #include <type_traits>
@@ -17,7 +18,7 @@ class Operator {
   Operator() = default;
 
   constexpr Operator(Type type, Spin spin, uint8_t orbital) noexcept
-      : data_{static_cast<uint8_t>(type), static_cast<uint8_t>(spin), orbital} {
+      : data_{orbital, static_cast<uint8_t>(spin), static_cast<uint8_t>(type)} {
   }
 
   [[nodiscard]] constexpr Type type() const noexcept {
@@ -82,16 +83,14 @@ class Operator {
   }
 
   [[nodiscard]] constexpr uint8_t data() const noexcept {
-    return static_cast<uint8_t>(data_.type << TYPE_BIT_POSITION) |
-           static_cast<uint8_t>(data_.spin << SPIN_BIT_POSITION) |
-           static_cast<uint8_t>(data_.orbital);
+    return std::bit_cast<uint8_t>(data_);
   }
 
  private:
   struct Data {
-    uint8_t type : 1;
-    uint8_t spin : 1;
     uint8_t orbital : 6;
+    uint8_t spin : 1;
+    uint8_t type : 1;
   };
   static_assert(std::has_unique_object_representations_v<Data>);
 
