@@ -10,8 +10,7 @@
 namespace qmutils {
 
 inline std::mt19937& get_random_generator() {
-  static std::random_device rd;
-  static std::mt19937 gen(rd());
+  static std::mt19937 gen(42);
   return gen;
 }
 

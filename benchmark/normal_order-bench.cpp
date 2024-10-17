@@ -4,6 +4,7 @@
 #include <random>
 
 #include "qmutils/normal_order.h"
+#include "qmutils/utils.h"
 
 namespace qmutils {
 namespace {
@@ -24,8 +25,7 @@ Operator random_operator(std::mt19937& gen) {
 
 // Helper function to create a term with random operators
 Term create_random_term(size_t n_operators) {
-  std::random_device rd;
-  std::mt19937 gen(rd());
+  static std::mt19937 gen = get_random_generator();
 
   Term::container_type operators;
   operators.reserve(n_operators);
@@ -119,8 +119,7 @@ static void BM_NormalOrderExpression(benchmark::State& state) {
 }
 
 Term generate_momentum_conserving_term(uint8_t nk) {
-  std::random_device rd;
-  std::mt19937 gen(rd());
+  static std::mt19937 gen = get_random_generator();
   std::uniform_int_distribution<> dist(0, nk - 1);
 
   uint8_t k1 = dist(gen);
@@ -151,8 +150,7 @@ static void BM_NormalOrderMomentumConserving(benchmark::State& state) {
 }
 
 Term generate_momentum_spin_conserving_term(uint8_t n, uint8_t nk) {
-  std::random_device rd;
-  std::mt19937 gen(rd());
+  static std::mt19937 gen = get_random_generator();
   std::uniform_int_distribution<> momentum_dist(0, nk - 1);
   std::uniform_int_distribution<> spin_dist(0, 1);
 

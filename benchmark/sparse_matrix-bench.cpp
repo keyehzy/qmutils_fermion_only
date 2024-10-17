@@ -4,13 +4,14 @@
 #include <random>
 
 #include "qmutils/sparse_matrix.h"
+#include "qmutils/utils.h"
 
+namespace qmutils {
 namespace {
 
 template <typename T>
-void fill_sparse_matrix(qmutils::SparseMatrix<T>& matrix, double density) {
-  std::random_device rd;
-  std::mt19937 gen(rd());
+void fill_sparse_matrix(SparseMatrix<T>& matrix, double density) {
+  static std::mt19937 gen = get_random_generator();
   std::uniform_real_distribution<> dis(0.0, 1.0);
   std::uniform_int_distribution<> row_dis(0, matrix.rows() - 1);
   std::uniform_int_distribution<> col_dis(0, matrix.cols() - 1);
@@ -48,8 +49,7 @@ static void BM_SparseMatrixAccess(benchmark::State& state) {
   qmutils::SparseMatrix<double> matrix(size, size);
   fill_sparse_matrix(matrix, density);
 
-  std::random_device rd;
-  std::mt19937 gen(rd());
+  static std::mt19937 gen = get_random_generator();
   std::uniform_int_distribution<> row_dis(0, size - 1);
   std::uniform_int_distribution<> col_dis(0, size - 1);
 
@@ -96,3 +96,4 @@ BENCHMARK(BM_SparseMatrixIteration)
     ->Complexity();
 
 }  // namespace
+}  // namespace qmutils

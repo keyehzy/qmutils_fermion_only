@@ -5,13 +5,13 @@
 
 #include "qmutils/expression.h"
 #include "qmutils/normal_order.h"
+#include "qmutils/utils.h"
 
 namespace qmutils {
 namespace {
 
 Operator random_operator() {
-  static std::random_device rd;
-  static std::mt19937 gen(rd());
+  static std::mt19937 gen = get_random_generator();
   static std::uniform_int_distribution<> type_dist(0, 1);
   static std::uniform_int_distribution<> spin_dist(0, 1);
   static std::uniform_int_distribution<> orbital_dist(0, 63);
@@ -90,8 +90,7 @@ static void BM_LRUCacheNormalOrderNonCommutingTerm(benchmark::State& state) {
 }
 
 Term generate_momentum_conserving_term(uint8_t nk) {
-  std::random_device rd;
-  std::mt19937 gen(rd());
+  static std::mt19937 gen = get_random_generator();
   std::uniform_int_distribution<> dist(0, nk - 1);
 
   uint8_t k1 = dist(gen);

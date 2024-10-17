@@ -62,8 +62,7 @@ static void BM_BasisIteration(benchmark::State& state) {
 
 Term::container_type generate_valid_operators(size_t orbitals,
                                               size_t particles) {
-  static std::random_device rd;
-  static std::mt19937 gen(rd());
+  static std::mt19937 gen = get_random_generator();
   std::uniform_int_distribution<> orbital_dist(0, orbitals - 1);
   std::uniform_int_distribution<> spin_dist(0, 1);
 
