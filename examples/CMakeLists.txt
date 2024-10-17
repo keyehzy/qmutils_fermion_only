@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 3.14)
 
+find_package(Armadillo REQUIRED)
+
 function(add_example example_file)
   get_filename_component(
     example_name
@@ -15,7 +17,8 @@ function(add_example example_file)
   target_compile_options(
     ${example_name}
     PRIVATE
-    "${QMUTILS_CXX_COMPILER_OPTIONS}"
+    ${QMUTILS_CXX_COMPILER_OPTIONS}
+    ${ARMADILLO_INCLUDE_DIRS}
   )
 
   target_include_directories(
@@ -30,12 +33,14 @@ function(add_example example_file)
     PRIVATE
     qmutils
     xxhashct
+    ${ARMADILLO_LIBRARIES}
   )
 
 endfunction()
 
 file(GLOB EXAMPLE_FILES
   hubbard_1d.cpp
+  hubbard_1d_mean_field.cpp
 )
 
 foreach(EXAMPLE_FILE ${EXAMPLE_FILES})

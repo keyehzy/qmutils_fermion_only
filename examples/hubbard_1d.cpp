@@ -50,8 +50,8 @@ int main() {
   HubbardChain1D chain(sites, 1.0f, 4.0f);
   qmutils::Basis basis(sites, particles);
 
-  qmutils::SparseMatrix<std::complex<float>> mat(basis.size(), basis.size());
-  qmutils::compute_matrix_elements(mat, basis, chain.hamiltonian());
+  auto mat = qmutils::compute_matrix_elements<
+      qmutils::SparseMatrix<std::complex<float>>>(basis, chain.hamiltonian());
 
   for (size_t i = 0; i < basis.size(); ++i) {
     for (size_t j = 0; j < basis.size(); ++j) {

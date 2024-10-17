@@ -9,8 +9,8 @@
 namespace qmutils {
 
 template <typename MatrixType>
-void compute_matrix_elements(MatrixType& matrix_elements, const Basis& basis,
-                             const Expression& A) {
+MatrixType compute_matrix_elements(const Basis& basis, const Expression& A) {
+  MatrixType matrix_elements(basis.size(), basis.size());
   NormalOrderer orderer;
   for (size_t i = 0; i < basis.size(); ++i) {
     for (size_t j = 0; j < basis.size(); ++j) {
@@ -20,6 +20,7 @@ void compute_matrix_elements(MatrixType& matrix_elements, const Basis& basis,
       matrix_elements(i, j) = result[{}];
     }
   }
+  return matrix_elements;
 }
 
 }  // namespace qmutils

@@ -48,6 +48,18 @@ class Expression {
     return *this;
   }
 
+  Expression& operator+=(Operator other) {
+    m_terms[{other}] += coefficient_type(1.0);
+    normalize();
+    return *this;
+  }
+
+  Expression& operator+=(coefficient_type other) {
+    m_terms[{}] += coefficient_type(other);
+    normalize();
+    return *this;
+  }
+
   Expression& operator-=(const Expression& other) {
     for (const auto& [ops, coeff] : other.m_terms) {
       m_terms[ops] -= coeff;

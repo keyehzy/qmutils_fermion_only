@@ -19,8 +19,9 @@ TEST_F(MatrixElementsTest, SparseMatrixComputationOffDiagonal1) {
       Expression(Term(1.0f, {Operator::creation(Operator::Spin::Up, 0),
                              Operator::annihilation(Operator::Spin::Up, 1)}));
 
-  SparseMatrix<Expression::coefficient_type> matrix(basis.size(), basis.size());
-  compute_matrix_elements(matrix, basis, H.adjoint());
+  auto matrix =
+      compute_matrix_elements<SparseMatrix<Expression::coefficient_type>>(
+          basis, H.adjoint());
 
   EXPECT_EQ(matrix.rows(), 4);
   EXPECT_EQ(matrix.cols(), 4);
@@ -37,8 +38,9 @@ TEST_F(MatrixElementsTest, SparseMatrixComputationOffDiagonal2) {
       Expression(Term(1.0f, {Operator::creation(Operator::Spin::Up, 1),
                              Operator::annihilation(Operator::Spin::Up, 0)}));
 
-  SparseMatrix<Expression::coefficient_type> matrix(basis.size(), basis.size());
-  compute_matrix_elements(matrix, basis, H.adjoint());
+  auto matrix =
+      compute_matrix_elements<SparseMatrix<Expression::coefficient_type>>(
+          basis, H.adjoint());
 
   EXPECT_EQ(matrix.rows(), 4);
   EXPECT_EQ(matrix.cols(), 4);
@@ -57,8 +59,9 @@ TEST_F(MatrixElementsTest, SparseMatrixComputationOffDiagonal3) {
   H += Expression(Term(1.0f, {Operator::creation(Operator::Spin::Up, 0),
                               Operator::annihilation(Operator::Spin::Up, 1)}));
 
-  SparseMatrix<Expression::coefficient_type> matrix(basis.size(), basis.size());
-  compute_matrix_elements(matrix, basis, H.adjoint());
+  auto matrix =
+      compute_matrix_elements<SparseMatrix<Expression::coefficient_type>>(
+          basis, H.adjoint());
 
   // FIXME: this doesn't work at the moment
   EXPECT_EQ(matrix.rows(), 4);
