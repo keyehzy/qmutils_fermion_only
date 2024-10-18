@@ -42,6 +42,7 @@ file(GLOB EXAMPLE_FILES
   hubbard_1d.cpp
   hubbard_1d_mean_field.cpp
   fourier_transform_1d.cpp
+  fourier_transform_2d.cpp
 )
 
 foreach(EXAMPLE_FILE ${EXAMPLE_FILES})
