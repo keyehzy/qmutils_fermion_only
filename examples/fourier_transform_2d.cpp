@@ -3,6 +3,7 @@
 #include <stdexcept>
 
 #include "qmutils/expression.h"
+#include "qmutils/functional.h"
 #include "qmutils/operator.h"
 
 using namespace qmutils;
@@ -111,24 +112,6 @@ static Expression fourier_transform_operator_2d(const Operator& op,
   return result;
 }
 
-static Expression fourier_transform_term_2d(const Term& term,
-                                            const Index2D& lattice) {
-  Expression result(term.coefficient());
-  for (const auto& op : term.operators()) {
-    result *= fourier_transform_operator_2d(op, lattice);
-  }
-  return result;
-}
-
-static Expression fourier_transform_2d(const Expression& expr,
-                                       const Index2D& lattice) {
-  Expression result;
-  for (const auto& [ops, coeff] : expr.terms()) {
-    result += fourier_transform_term_2d(Term(coeff, ops), lattice);
-  }
-  return result;
-}
-
 static void print_hamiltonian(const Expression& hamiltonian,
                               float epsilon = 3e-4f) {
   for (const auto& [ops, coeff] : hamiltonian.terms()) {
@@ -149,8 +132,9 @@ int main() {
   std::cout << "Hamiltonian in real space:" << std::endl;
   print_hamiltonian(model.hamiltonian());
 
-  Expression momentum_hamiltonian =
-      fourier_transform_2d(model.hamiltonian(), model.lattice());
+  Expression momentum_hamiltonian = transform_expression(
+      fourier_transform_operator_2d, model.hamiltonian(), model.lattice());
+
   std::cout << "Hamiltonian in momentum space:" << std::endl;
   print_hamiltonian(momentum_hamiltonian);
 

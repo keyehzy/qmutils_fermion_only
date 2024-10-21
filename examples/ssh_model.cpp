@@ -6,6 +6,7 @@
 
 #include "qmutils/basis.h"
 #include "qmutils/expression.h"
+#include "qmutils/functional.h"
 #include "qmutils/matrix_elements.h"
 #include "qmutils/operator.h"
 
@@ -136,26 +137,6 @@ Expression fourier_transform_operator(const Operator& op,
   return result;
 }
 
-template <size_t L>
-Expression fourier_transform_term(const Term& term,
-                                  const IndexND<L, 2>& lattice) {
-  Expression result(term.coefficient());
-  for (const auto& op : term.operators()) {
-    result *= fourier_transform_operator(op, lattice);
-  }
-  return result;
-}
-
-template <size_t L>
-Expression fourier_transform(const Expression& expr,
-                             const IndexND<L, 2>& lattice) {
-  Expression result;
-  for (const auto& [ops, coeff] : expr.terms()) {
-    result += fourier_transform_term(Term(coeff, ops), lattice);
-  }
-  return result;
-}
-
 static void print_hamiltonian(const Expression& hamiltonian,
                               float epsilon = 3e-4f) {
   for (const auto& [ops, coeff] : hamiltonian.terms()) {
@@ -166,9 +147,8 @@ static void print_hamiltonian(const Expression& hamiltonian,
   std::cout << std::endl;
 }
 
-static Expression transform_operator(const Operator& op,
-                                     const arma::cx_fmat& eigenvectors,
-                                     const Basis& basis) {
+static Expression transform_operator_to_band_basis(
+    const Operator& op, const arma::cx_fmat& eigenvectors, const Basis& basis) {
   Expression result;
   Operator needle(Operator::Type::Creation, op.spin(), op.orbital());
   size_t i = static_cast<size_t>(basis.index({needle}));
@@ -185,26 +165,6 @@ static Expression transform_operator(const Operator& op,
   return result;
 }
 
-static Expression transform_term(const Term& term,
-                                 const arma::cx_fmat& eigenvectors,
-                                 const Basis& basis) {
-  Expression result(term.coefficient());
-  for (const auto& op : term.operators()) {
-    result *= transform_operator(op, eigenvectors, basis);
-  }
-  return result;
-}
-
-static Expression transform_to_diagonal(const Expression& expr,
-                                        const arma::cx_fmat& eigenvectors,
-                                        const Basis& basis) {
-  Expression result;
-  for (const auto& [ops, coeff] : expr.terms()) {
-    result += transform_term(Term(coeff, ops), eigenvectors, basis);
-  }
-  return result;
-}
-
 int main() {
   const size_t L = 10;  // 10 unit cells
   float t1 = 1.0f, t2 = 0.5f, delta = 0.1f;
@@ -215,7 +175,9 @@ int main() {
   print_hamiltonian(ssh_model.hamiltonian());
 
   Expression momentum_hamiltonian =
-      fourier_transform(ssh_model.hamiltonian(), ssh_model.lattice());
+      transform_expression(fourier_transform_operator<L>,
+                           ssh_model.hamiltonian(), ssh_model.lattice());
+
   std::cout << "SSH Hamiltonian in momentum space:" << std::endl;
   print_hamiltonian(momentum_hamiltonian);
 
@@ -228,6 +190,7 @@ int main() {
 
   auto H_matrix =
       compute_matrix_elements<arma::cx_fmat>(basis, momentum_hamiltonian);
+
   arma::fvec eigenvalues;
   arma::cx_fmat eigenvectors;
   arma::eig_sym(eigenvalues, eigenvectors, H_matrix);
@@ -239,7 +202,9 @@ int main() {
   }
 
   Expression diagonal_hamiltonian =
-      transform_to_diagonal(momentum_hamiltonian, eigenvectors, basis);
+      transform_expression(transform_operator_to_band_basis,
+                           momentum_hamiltonian, eigenvectors, basis);
+
   std::cout << "SSH Hamiltonian in diagonal form:" << std::endl;
   print_hamiltonian(diagonal_hamiltonian);
 

@@ -5,6 +5,7 @@
 #include <vector>
 
 #include "qmutils/expression.h"
+#include "qmutils/functional.h"
 #include "qmutils/operator.h"
 
 using namespace qmutils;
@@ -50,22 +51,6 @@ static Expression fourier_transform_operator(const Operator& op, size_t size) {
   return result;
 }
 
-static Expression fourier_transform_term(const Term& term, size_t size) {
-  Expression result(term.coefficient());
-  for (const auto& op : term.operators()) {
-    result *= fourier_transform_operator(op, size);
-  }
-  return result;
-}
-
-static Expression fourier_transform(const Expression& expr, size_t size) {
-  Expression result;
-  for (const auto& [ops, coeff] : expr.terms()) {
-    result += fourier_transform_term(Term(coeff, ops), size);
-  }
-  return result;
-}
-
 static void print_hamiltonian(const Expression& hamiltonian,
                               float epsilon = 3e-4f) {
   for (const auto& [ops, coeff] : hamiltonian.terms()) {
@@ -85,8 +70,9 @@ int main() {
   std::cout << "Hamiltonian in real space:" << std::endl;
   print_hamiltonian(model.hamiltonian());
 
-  Expression momentum_hamiltonian =
-      fourier_transform(model.hamiltonian(), lattice_size);
+  Expression momentum_hamiltonian = transform_expression(
+      fourier_transform_operator, model.hamiltonian(), lattice_size);
+
   std::cout << "Hamiltonian in momentum space:" << std::endl;
   print_hamiltonian(momentum_hamiltonian);
 
