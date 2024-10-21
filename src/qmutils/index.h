@@ -34,7 +34,8 @@ class StaticIndex {
     return orbital;
   }
 
-  [[nodiscard]] constexpr std::array<size_t, Dimensions> from_orbital(uint8_t orbital) const {
+  [[nodiscard]] constexpr std::array<size_t, Dimensions> from_orbital(
+      uint8_t orbital) const {
     if (orbital >= total_size()) {
       throw std::out_of_range("Orbital index out of bounds");
     }
@@ -73,7 +74,8 @@ class DynamicIndex {
     }
   }
 
-  [[nodiscard]] uint8_t to_orbital(const std::vector<size_t>& coordinates) const {
+  [[nodiscard]] uint8_t to_orbital(
+      const std::vector<size_t>& coordinates) const {
     if (coordinates.size() != m_dimensions.size()) {
       throw std::out_of_range("Invalid number of coordinates");
     }

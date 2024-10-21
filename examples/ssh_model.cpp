@@ -17,39 +17,41 @@ template <typename IndexType>
 class SSHModel {
  public:
   SSHModel(float t1, float t2, float delta, IndexType index)
-      : m_t1(t1), m_t2(t2), m_delta(delta), m_index(index) {
-    construct_hamiltonian();
+      : m_t1(t1), m_t2(t2), m_delta(delta), m_index(index) {}
+
+  Expression hamiltonian() const {
+    Expression H;
+
+    auto hopping = [this](size_t unit_cell_1, size_t size_1, size_t unit_cell_2,
+                          size_t site_2, float t) {
+      Expression term;
+      uint8_t orbital1 = m_index.to_orbital(unit_cell_1, size_1);
+      uint8_t orbital2 = m_index.to_orbital(unit_cell_2, site_2);
+      term += t * Expression::hopping(orbital1, orbital2, Operator::Spin::Up);
+      term += t * Expression::hopping(orbital1, orbital2, Operator::Spin::Down);
+      return term;
+    };
+
+    const size_t L = m_index.dimension(0);
+
+    // Intra-cell hopping
+    for (size_t i = 0; i < L; ++i) {
+      H += hopping(i, 0, i, 1, m_t1 + m_delta);
+    }
+
+    // Inter-cell hopping
+    for (size_t i = 0; i < L; ++i) {
+      H += hopping(i, 1, (i + 1) % L, 0, m_t2 - m_delta);
+    }
+
+    return H;
   }
 
-  const Expression& hamiltonian() const { return m_hamiltonian; }
-
-  const IndexType& lattice() const { return m_index; }
+  const IndexType& index() const { return m_index; }
 
  private:
   float m_t1, m_t2, m_delta;
   IndexType m_index;
-  Expression m_hamiltonian;
-
-  void construct_hamiltonian() {
-    // Intra-cell hopping
-    for (size_t i = 0; i < m_index.dimension(0); ++i) {
-      add_hopping(i, 0, i, 1, m_t1 + m_delta);
-    }
-
-    // Inter-cell hopping
-    for (size_t i = 0; i < m_index.dimension(0); ++i) {
-      add_hopping(i, 1, (i + 1) % m_index.dimension(0), 0, m_t2 - m_delta);
-    }
-  }
-
-  void add_hopping(size_t i1, size_t j1, size_t i2, size_t j2, float t) {
-    uint8_t orbital1 = m_index.to_orbital(i1, j1);
-    uint8_t orbital2 = m_index.to_orbital(i2, j2);
-    m_hamiltonian +=
-        t * Expression::hopping(orbital1, orbital2, Operator::Spin::Up);
-    m_hamiltonian +=
-        t * Expression::hopping(orbital1, orbital2, Operator::Spin::Down);
-  }
 };
 
 template <size_t L>
@@ -117,7 +119,7 @@ int main() {
 
   Expression momentum_hamiltonian =
       transform_expression(fourier_transform_operator<L>,
-                           ssh_model.hamiltonian(), ssh_model.lattice());
+                           ssh_model.hamiltonian(), ssh_model.index());
 
   std::cout << "SSH Hamiltonian in momentum space:" << std::endl;
   print_hamiltonian(momentum_hamiltonian);
