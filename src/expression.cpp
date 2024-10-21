@@ -45,7 +45,6 @@ Expression Expression::adjoint() const {
     }
     result.m_terms[adjoint_operators] += std::conj(coeff);
   }
-  result.normalize();
   return result;
 }
 
