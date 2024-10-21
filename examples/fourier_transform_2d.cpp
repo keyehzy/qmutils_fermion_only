@@ -55,10 +55,10 @@ class TightBindingModel2D {
   Expression m_hamiltonian;
 
   void construct_hamiltonian() {
-    for (size_t y = 0; y < m_index.height(); ++y) {
-      for (size_t x = 0; x < m_index.width(); ++x) {
+    for (uint8_t y = 0; y < m_index.height(); ++y) {
+      for (uint8_t x = 0; x < m_index.width(); ++x) {
         // Horizontal hopping
-        size_t next_x = (x + 1) % m_index.width();
+        uint8_t next_x = (x + 1) % m_index.width();
         m_hamiltonian +=
             m_t * Expression::hopping(m_index.to_orbital(x, y),
                                       m_index.to_orbital(next_x, y),
@@ -69,7 +69,7 @@ class TightBindingModel2D {
                                       Operator::Spin::Down);
 
         // Vertical hopping
-        size_t next_y = (y + 1) % m_index.height();
+        uint8_t next_y = (y + 1) % m_index.height();
         m_hamiltonian +=
             m_t * Expression::hopping(m_index.to_orbital(x, y),
                                       m_index.to_orbital(x, next_y),

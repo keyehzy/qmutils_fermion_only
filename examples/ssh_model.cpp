@@ -35,12 +35,12 @@ class SSHModel {
     const size_t L = m_index.dimension(0);
 
     // Intra-cell hopping
-    for (size_t i = 0; i < L; ++i) {
+    for (uint8_t i = 0; i < L; ++i) {
       H += hopping(i, 0, i, 1, m_t1 + m_delta);
     }
 
     // Inter-cell hopping
-    for (size_t i = 0; i < L; ++i) {
+    for (uint8_t i = 0; i < L; ++i) {
       H += hopping(i, 1, (i + 1) % L, 0, m_t2 - m_delta);
     }
 
@@ -100,7 +100,7 @@ static Expression transform_operator_to_band_basis(
                                     : std::conj(eigenvectors(i, k));
     // Get spin and orbital indices from basis index k
     Operator::Spin spin = basis.at(k)[0].spin();
-    size_t orbital = basis.at(k)[0].orbital();
+    uint8_t orbital = basis.at(k)[0].orbital();
     Term new_term(coeff, {Operator(op.type(), spin, orbital)});
     result += new_term;
   }
