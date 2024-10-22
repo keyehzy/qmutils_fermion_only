@@ -25,7 +25,7 @@ class TightBindingModel1D {
 
   void construct_hamiltonian() {
     for (uint8_t i = 0; i < m_size; ++i) {
-    uint8_t j = (i + 1) % m_size;  // Periodic boundary conditions
+      uint8_t j = (i + 1) % m_size;  // Periodic boundary conditions
       m_hamiltonian += Expression::hopping(i, j, Operator::Spin::Up) * m_t;
       m_hamiltonian += Expression::hopping(i, j, Operator::Spin::Down) * m_t;
     }
