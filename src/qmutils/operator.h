@@ -12,8 +12,11 @@ class Operator {
   enum class Type : uint8_t { Creation = 0, Annihilation = 1 };
   enum class Spin : uint8_t { Up = 0, Down = 1 };
 
-  static constexpr uint8_t TYPE_BIT_POSITION = 7;
-  static constexpr uint8_t SPIN_BIT_POSITION = 6;
+  static constexpr uint8_t ORBITAL_BITFIELD_WIDTH = 6;
+
+  static constexpr size_t max_orbital_size() {
+    return 1 << ORBITAL_BITFIELD_WIDTH;
+  }
 
   Operator() = default;
 
@@ -88,7 +91,7 @@ class Operator {
 
  private:
   struct Data {
-    uint8_t orbital : 6;
+    uint8_t orbital : ORBITAL_BITFIELD_WIDTH;
     uint8_t spin : 1;
     uint8_t type : 1;
   };

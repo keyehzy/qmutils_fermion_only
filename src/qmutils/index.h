@@ -8,8 +8,8 @@ class StaticIndex {
   static constexpr size_t Dimensions = sizeof...(Dims);
 
   constexpr StaticIndex() {
-    static_assert(total_size() <= 64,
-                  "Size exceeds maximum number of orbitals (64)");
+    static_assert(total_size() <= Operator::max_orbital_size(),
+                  "Size exceeds maximum number of orbitals");
   }
 
   template <typename... Coords>
@@ -69,8 +69,8 @@ class DynamicIndex {
  public:
   DynamicIndex(std::vector<size_t> dimensions)
       : m_dimensions(std::move(dimensions)) {
-    if (total_size() > 64) {
-      throw std::out_of_range("Size exceeds maximum number of orbitals (64)");
+    if (total_size() > Operator::max_orbital_size()) {
+      throw std::out_of_range("Size exceeds maximum number of orbitals");
     }
   }
 
