@@ -13,14 +13,21 @@ MatrixType compute_matrix_elements_serial(const Basis& basis,
                                           const Expression& A) {
   MatrixType matrix_elements(basis.size(), basis.size());
   NormalOrderer orderer;
-  for (size_t i = 0; i < basis.size(); ++i) {
-    for (size_t j = 0; j < basis.size(); ++j) {
-      Expression left(Term(basis.at(i)));
-      Expression right(Term(basis.at(j)));
-      Expression result = orderer.normal_order(left.adjoint() * A * right);
-      matrix_elements(i, j) = result[{}];
+
+  for (size_t j = 0; j < basis.size(); ++j) {
+    Expression right(Term(basis.at(j)));
+    Expression product = orderer.normal_order(A * right);
+
+    std::erase_if(product.terms(), [&](const auto& item) {
+      return !basis.contains(item.first);
+    });
+
+    for (const auto& term : product.terms()) {
+      size_t i = static_cast<size_t>(basis.index_of(term.first));
+      matrix_elements(i, j) = term.second;
     }
   }
+
   return matrix_elements;
 }
 
@@ -31,36 +38,23 @@ MatrixType compute_matrix_elements(const Basis& basis, const Expression& A) {
 #pragma omp parallel
   {
     NormalOrderer orderer;
-#pragma omp for collapse(2) schedule(dynamic)
-    for (size_t i = 0; i < basis.size(); ++i) {
-      for (size_t j = 0; j < basis.size(); ++j) {
-        Expression left(Term(basis.at(i)));
-        Expression right(Term(basis.at(j)));
-        Expression result = orderer.normal_order(left.adjoint() * A * right);
-        matrix_elements(i, j) = result[{}];
+#pragma omp for schedule(dynamic)
+    for (size_t j = 0; j < basis.size(); ++j) {
+      Expression right(Term(basis.at(j)));
+      Expression product = orderer.normal_order(A * right);
+
+      std::erase_if(product.terms(), [&](const auto& item) {
+        return !basis.contains(item.first);
+      });
+
+      for (const auto& term : product.terms()) {
+        size_t i = static_cast<size_t>(basis.index_of(term.first));
+        matrix_elements(i, j) = term.second;
       }
     }
   }
 
   return matrix_elements;
-}
-
-template <typename MatrixType>
-void compute_matrix_elements_parallel_subset(
-    MatrixType& matrix_elements, const Basis& basis, const Expression& A,
-    const std::vector<std::pair<size_t, size_t>>& indices) {
-#pragma omp parallel
-  {
-    NormalOrderer orderer;
-#pragma omp for schedule(dynamic)
-    for (size_t idx = 0; idx < indices.size(); ++idx) {
-      const auto& [i, j] = indices[idx];
-      Expression left(Term(basis.at(i)));
-      Expression right(Term(basis.at(j)));
-      Expression result = orderer.normal_order(left.adjoint() * A * right);
-      matrix_elements(i, j) = result[{}];
-    }
-  }
 }
 
 inline size_t get_optimal_chunk_size(size_t total_size,
@@ -77,19 +71,24 @@ MatrixType compute_matrix_elements_chunked(const Basis& basis,
   MatrixType matrix_elements(basis.size(), basis.size());
 
   if (chunk_size == 0) {
-    chunk_size = get_optimal_chunk_size(basis.size() * basis.size());
+    chunk_size = get_optimal_chunk_size(basis.size());
   }
 
 #pragma omp parallel
   {
     NormalOrderer orderer;
-#pragma omp for collapse(2) schedule(dynamic, chunk_size)
-    for (size_t i = 0; i < basis.size(); ++i) {
-      for (size_t j = 0; j < basis.size(); ++j) {
-        Expression left(Term(basis.at(i)));
-        Expression right(Term(basis.at(j)));
-        Expression result = orderer.normal_order(left.adjoint() * A * right);
-        matrix_elements(i, j) = result[{}];
+#pragma omp for schedule(dynamic, chunk_size)
+    for (size_t j = 0; j < basis.size(); ++j) {
+      Expression right(Term(basis.at(j)));
+      Expression product = orderer.normal_order(A * right);
+
+      std::erase_if(product.terms(), [&](const auto& item) {
+        return !basis.contains(item.first);
+      });
+
+      for (const auto& term : product.terms()) {
+        size_t i = static_cast<size_t>(basis.index_of(term.first));
+        matrix_elements(i, j) = term.second;
       }
     }
   }

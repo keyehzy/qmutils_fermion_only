@@ -11,7 +11,9 @@ void Basis::generate_basis() {
 void Basis::generate_combinations(operators_type& current, size_t first_orbital,
                                   size_t depth) {
   if (depth == m_particles) {
-    m_index_map.push_back(current);
+    operators_type current_copy(current);
+    std::sort(current_copy.begin(), current_copy.end());
+    m_index_map.push_back(current_copy);
     return;
   }
 
@@ -27,5 +29,4 @@ void Basis::generate_combinations(operators_type& current, size_t first_orbital,
     }
   }
 }
-
 }  // namespace qmutils
