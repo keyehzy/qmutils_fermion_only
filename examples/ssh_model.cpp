@@ -93,7 +93,7 @@ static Expression transform_operator_to_band_basis(
     const Operator& op, const arma::cx_fmat& eigenvectors, const Basis& basis) {
   Expression result;
   Operator needle(Operator::Type::Creation, op.spin(), op.orbital());
-  size_t i = static_cast<size_t>(basis.index({needle}));
+  size_t i = static_cast<size_t>(basis.index_of({needle}));
   for (size_t k = 0; k < basis.size(); ++k) {
     std::complex<float> coeff = (op.type() == Operator::Type::Annihilation)
                                     ? eigenvectors(i, k)

@@ -62,7 +62,7 @@ class Basis {
   }
 
   // TODO: needs testing
-  ptrdiff_t index(const operators_type& value) const {
+  ptrdiff_t index_of(const operators_type& value) const {
     QMUTILS_ASSERT(contains(value));
     auto it = std::lower_bound(m_index_map.begin(), m_index_map.end(), value);
     return std::distance(m_index_map.begin(), it);

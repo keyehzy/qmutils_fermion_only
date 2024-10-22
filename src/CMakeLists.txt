@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 3.14)
 
+find_package(OpenMP REQUIRED)
+
 add_executable(
   main
   main.cpp
@@ -33,4 +35,9 @@ target_include_directories(
   ${XXHASHCT_INCLUDE_DIR}
 )
 
-target_link_libraries(qmutils PRIVATE xxhashct)
+target_link_libraries(
+  qmutils
+  PUBLIC
+  xxhashct
+  OpenMP::OpenMP_CXX
+)

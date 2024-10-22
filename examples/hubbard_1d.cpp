@@ -1,3 +1,5 @@
+#include <armadillo>
+
 #include "qmutils/expression.h"
 #include "qmutils/matrix_elements.h"
 #include "qmutils/sparse_matrix.h"
@@ -44,14 +46,14 @@ void HubbardChain1D::construct_hamiltonian() {
 }
 
 int main() {
-  const size_t sites = 3;
-  const size_t particles = 2;
+  const size_t sites = 4;
+  const size_t particles = 3;
 
   HubbardChain1D chain(sites, 1.0f, 4.0f);
   qmutils::Basis basis(sites, particles);
 
-  auto mat = qmutils::compute_matrix_elements<
-      qmutils::SparseMatrix<std::complex<float>>>(basis, chain.hamiltonian());
+  auto mat = qmutils::compute_matrix_elements<arma::cx_fmat>(
+      basis, chain.hamiltonian());
 
   for (size_t i = 0; i < basis.size(); ++i) {
     for (size_t j = 0; j < basis.size(); ++j) {
