@@ -50,14 +50,14 @@ TEST(SparseMatrixTest, ClearAndIteration) {
   matrix(2, 2) = 3;
 
   int sum = 0;
-  for (const auto& [row, col, value] : matrix) {
+  for (auto [row, col, value] : matrix) {
     sum += value;
   }
   EXPECT_EQ(sum, 6);
 
   matrix.clear();
   sum = 0;
-  for (const auto& [row, col, value] : matrix) {
+  for (auto [row, col, value] : matrix) {
     sum += value;
   }
   EXPECT_EQ(sum, 0);

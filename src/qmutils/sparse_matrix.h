@@ -40,7 +40,10 @@ class SparseRow {
 
   size_t byte_index(size_t pos) const { return pos / BITS_PER_BYTE; }
   size_t bit_index(size_t pos) const { return pos % BITS_PER_BYTE; }
-  uint8_t bit_mask(size_t bit_pos) const { return 1U << bit_pos; }
+
+  uint8_t bit_mask(size_t bit_pos) const {
+    return static_cast<uint8_t>(1U << bit_pos);
+  }
 
  public:
   explicit SparseRow(size_t size = 0) { resize(size); }
