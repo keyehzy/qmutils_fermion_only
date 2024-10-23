@@ -1,6 +1,9 @@
 #pragma once
 
+#include <bitset>
 #include <cstdint>
+#include <iterator>
+#include <numeric>
 #include <stdexcept>
 #include <vector>
 
@@ -9,126 +12,124 @@ namespace qmutils {
 template <typename T>
 class SparseMatrix;
 
-template <typename T>
-class SparseMatrixIterator;
+template <typename T, bool IsConst>
+class SparseMatrixIteratorImpl;
 
 template <typename T>
-class SparseMatrixConstIterator;
-
+using SparseMatrixIterator = SparseMatrixIteratorImpl<T, false>;
 template <typename T>
-struct SparseElement {
+using SparseMatrixConstIterator = SparseMatrixIteratorImpl<T, true>;
+
+template <typename T, bool IsConst>
+struct SparseElementImpl {
   size_t row;
   size_t col;
-  T& value;
+  typename std::conditional_t<IsConst, const T&, T&> value;
 
-  SparseElement(size_t r, size_t c, T& v) : row(r), col(c), value(v) {}
-};
-
-template <typename T>
-struct SparseConstElement {
-  size_t row;
-  size_t col;
-  const T& value;
-
-  SparseConstElement(size_t r, size_t c, const T& v)
+  SparseElementImpl(size_t r, size_t c,
+                    typename std::conditional_t<IsConst, const T&, T&> v)
       : row(r), col(c), value(v) {}
 };
 
 template <typename T>
 class SparseRow {
  private:
+  static constexpr size_t BITS_PER_BYTE = 8;
   std::vector<uint8_t> mask_;
   std::vector<T> values_;
+
+  size_t byte_index(size_t pos) const { return pos / BITS_PER_BYTE; }
+  size_t bit_index(size_t pos) const { return pos % BITS_PER_BYTE; }
+  uint8_t bit_mask(size_t bit_pos) const { return 1U << bit_pos; }
 
  public:
   explicit SparseRow(size_t size = 0) { resize(size); }
 
-  void resize(size_t size) { mask_.resize((size + 7) / 8, 0); }
+  void resize(size_t size) {
+    mask_.resize((size + BITS_PER_BYTE - 1) / BITS_PER_BYTE, 0);
+  }
 
-  size_t calculate_value_pos(size_t pos) const {
-    size_t byte_pos = pos / 8;
-    size_t bit_pos = pos % 8;
-    int value_pos = 0;
+  size_t calculate_value_index(size_t pos) const {
+    size_t byte_pos = byte_index(pos);
+    size_t bit_pos = bit_index(pos);
+    size_t count = 0;
 
+    // Count set bits in previous bytes
     for (size_t i = 0; i < byte_pos; ++i) {
-      value_pos += __builtin_popcount(static_cast<unsigned int>(mask_[i]));
+      count += std::bitset<BITS_PER_BYTE>(mask_[i]).count();
     }
-    value_pos += __builtin_popcount(static_cast<unsigned int>(mask_[byte_pos]) &
-                                    ((1U << bit_pos) - 1U));
 
-    return static_cast<size_t>(value_pos);
+    // Count set bits in current byte up to target position
+    uint8_t partial_mask = mask_[byte_pos] & ((1U << bit_pos) - 1U);
+    count += std::bitset<BITS_PER_BYTE>(partial_mask).count();
+
+    return count;
   }
 
   void set(size_t pos, const T& value) {
-    size_t byte_pos = pos / 8;
-    size_t bit_pos = pos % 8;
-
-    if (byte_pos >= mask_.size()) {
+    if (byte_index(pos) >= mask_.size()) {
       throw std::out_of_range("Position exceeds row size");
     }
 
-    bool has_value = mask_[byte_pos] & (1U << bit_pos);
-
+    bool has_value = test(pos);
     if (value != T{}) {
       if (!has_value) {
-        size_t insert_pos = calculate_value_pos(pos);
-        values_.insert(values_.begin() + static_cast<ptrdiff_t>(insert_pos),
-                       value);
-        mask_[byte_pos] |= (1U << bit_pos);
+        insert_value(pos, value);
       } else {
-        size_t value_pos = calculate_value_pos(pos);
-        values_[value_pos] = value;
+        update_value(pos, value);
       }
     } else if (has_value) {
-      size_t value_pos = calculate_value_pos(pos);
-      values_.erase(values_.begin() + static_cast<ptrdiff_t>(value_pos));
-      mask_[byte_pos] &= ~(1U << bit_pos);
+      remove_value(pos);
     }
   }
 
   T get(size_t pos) const {
-    size_t byte_pos = pos / 8;
-    size_t bit_pos = pos % 8;
-
-    if (byte_pos >= mask_.size()) {
+    if (byte_index(pos) >= mask_.size()) {
       throw std::out_of_range("Position exceeds row size");
     }
 
-    if (mask_[byte_pos] & (1U << bit_pos)) {
-      size_t value_pos = calculate_value_pos(pos);
-      return values_[value_pos];
-    }
-    return T{};
+    return test(pos) ? values_[calculate_value_index(pos)] : T{};
   }
 
   T& get_or_create_ref(size_t pos) {
-    size_t byte_pos = pos / 8;
-    size_t bit_pos = pos % 8;
-
-    if (byte_pos >= mask_.size()) {
+    if (byte_index(pos) >= mask_.size()) {
       throw std::out_of_range("Position exceeds row size");
     }
 
-    bool has_value = mask_[byte_pos] & (1U << bit_pos);
-    if (!has_value) {
-      size_t insert_pos = calculate_value_pos(pos);
-      values_.insert(values_.begin() + static_cast<ptrdiff_t>(insert_pos), T{});
-      mask_[byte_pos] |= (1U << bit_pos);
-      return values_[insert_pos];
-    } else {
-      size_t value_pos = calculate_value_pos(pos);
-      return values_[value_pos];
+    if (!test(pos)) {
+      insert_value(pos, T{});
     }
+    return values_[calculate_value_index(pos)];
   }
 
-  size_t size() const { return mask_.size() * 8; }
-  size_t value_count() const { return values_.size(); }
+  bool test(size_t pos) const {
+    size_t byte_pos = byte_index(pos);
+    return (mask_[byte_pos] & bit_mask(bit_index(pos))) != 0;
+  }
 
-  inline uint8_t get_mask(size_t byte_pos) const {
+  size_t size() const { return mask_.size() * BITS_PER_BYTE; }
+  size_t value_count() const { return values_.size(); }
+  uint8_t get_mask(size_t byte_pos) const {
     return byte_pos < mask_.size() ? mask_[byte_pos] : 0;
   }
-
   const std::vector<T>& values() const { return values_; }
+
+ private:
+  void insert_value(size_t pos, const T& value) {
+    size_t insert_pos = calculate_value_index(pos);
+    values_.insert(values_.begin() + static_cast<ptrdiff_t>(insert_pos), value);
+    mask_[byte_index(pos)] |= bit_mask(bit_index(pos));
+  }
+
+  void update_value(size_t pos, const T& value) {
+    values_[calculate_value_index(pos)] = value;
+  }
+
+  void remove_value(size_t pos) {
+    size_t value_pos = calculate_value_index(pos);
+    values_.erase(values_.begin() + static_cast<ptrdiff_t>(value_pos));
+    mask_[byte_index(pos)] &= ~bit_mask(bit_index(pos));
+  }
 };
 
 template <typename T>
@@ -138,6 +139,9 @@ class SparseMatrix {
   size_t num_cols_;
 
  public:
+  using iterator = SparseMatrixIterator<T>;
+  using const_iterator = SparseMatrixConstIterator<T>;
+
   SparseMatrix(size_t rows = 0, size_t cols = 0) : num_cols_(cols) {
     resize(rows, cols);
   }
@@ -150,31 +154,25 @@ class SparseMatrix {
     }
   }
 
-  T get(size_t row, size_t col) const {
+  void validate_indices(size_t row, size_t col) const {
     if (row >= rows_.size() || col >= num_cols_) {
       throw std::out_of_range("Matrix index out of bounds");
     }
+  }
+
+  T get(size_t row, size_t col) const {
+    validate_indices(row, col);
     return rows_[row].get(col);
   }
 
   void set(size_t row, size_t col, const T& value) {
-    if (row >= rows_.size() || col >= num_cols_) {
-      throw std::out_of_range("Matrix index out of bounds");
-    }
-    return rows_[row].set(col, value);
+    validate_indices(row, col);
+    rows_[row].set(col, value);
   }
 
-  T operator()(size_t row, size_t col) const {
-    if (row >= rows_.size() || col >= num_cols_) {
-      throw std::out_of_range("Matrix index out of bounds");
-    }
-    return rows_[row].get(col);
-  }
-
+  T operator()(size_t row, size_t col) const { return get(row, col); }
   T& operator()(size_t row, size_t col) {
-    if (row >= rows_.size() || col >= num_cols_) {
-      throw std::out_of_range("Matrix index out of bounds");
-    }
+    validate_indices(row, col);
     return rows_[row].get_or_create_ref(col);
   }
 
@@ -182,11 +180,9 @@ class SparseMatrix {
   size_t cols() const { return num_cols_; }
 
   size_t non_zero_count() const {
-    size_t count = 0;
-    for (const auto& row : rows_) {
-      count += row.value_count();
-    }
-    return count;
+    return std::accumulate(
+        rows_.begin(), rows_.end(), size_t{0},
+        [](size_t sum, const auto& row) { return sum + row.value_count(); });
   }
 
   const SparseRow<T>& row(size_t index) const {
@@ -205,72 +201,46 @@ class SparseMatrix {
     }
   }
 
-  using iterator = SparseMatrixIterator<T>;
-  using const_iterator = SparseMatrixConstIterator<T>;
-
   iterator begin() { return iterator(*this, 0, 0); }
-
   iterator end() { return iterator(*this, rows(), 0); }
-
   const_iterator begin() const { return const_iterator(*this, 0, 0); }
-
   const_iterator end() const { return const_iterator(*this, rows(), 0); }
-
   const_iterator cbegin() const { return const_iterator(*this, 0, 0); }
-
   const_iterator cend() const { return const_iterator(*this, rows(), 0); }
 
   iterator find(size_t row, size_t col) {
-    if (row >= rows_.size() || col >= num_cols_) {
-      return end();
-    }
-
-    const auto& sparse_row = rows_[row];
-    size_t byte_pos = col / 8;
-    size_t bit_pos = col % 8;
-
-    if (!(sparse_row.get_mask(byte_pos) & (1U << bit_pos))) {
-      return end();
-    }
-
-    size_t value_index = sparse_row.calculate_value_pos(col);
-    return iterator(*this, row, value_index);
+    return find_impl<iterator>(row, col);
   }
 
   const_iterator find(size_t row, size_t col) const {
-    if (row >= rows_.size() || col >= num_cols_) {
-      return cend();
-    }
-
-    const auto& sparse_row = rows_[row];
-    size_t byte_pos = col / 8;
-    size_t bit_pos = col % 8;
-
-    if (!(sparse_row.get_mask(byte_pos) & (1U << bit_pos))) {
-      return cend();
-    }
-
-    size_t value_index = sparse_row.calculate_value_pos(col);
-    return const_iterator(*this, row, value_index);
+    return find_impl<const_iterator>(row, col);
   }
 
   bool contains(size_t row, size_t col) const {
     if (row >= rows_.size() || col >= num_cols_) {
       return false;
     }
+    return rows_[row].test(col);
+  }
 
-    const auto& sparse_row = rows_[row];
-    size_t byte_pos = col / 8;
-    size_t bit = col % 8;
-
-    return (sparse_row.get_mask(byte_pos) & (1U << bit)) != 0;
+ private:
+  template <typename IteratorType>
+  IteratorType find_impl(size_t row, size_t col) {
+    if (!contains(row, col)) {
+      return IteratorType(*this, rows(), 0);
+    }
+    return IteratorType(*this, row, rows_[row].calculate_value_index(col));
   }
 };
 
-template <typename T>
-class SparseMatrixIterator {
+template <typename T, bool IsConst>
+class SparseMatrixIteratorImpl {
+  using MatrixType =
+      std::conditional_t<IsConst, const SparseMatrix<T>, SparseMatrix<T>>;
+  using ElementType = SparseElementImpl<T, IsConst>;
+
  private:
-  SparseMatrix<T>& matrix_;
+  MatrixType& matrix_;
   size_t current_row_;
   size_t current_value_index_;
 
@@ -287,17 +257,17 @@ class SparseMatrixIterator {
 
  public:
   using iterator_category = std::forward_iterator_tag;
-  using value_type = SparseElement<T>;
+  using value_type = ElementType;
   using difference_type = std::ptrdiff_t;
   using pointer = value_type*;
   using reference = value_type&;
 
-  SparseMatrixIterator(SparseMatrix<T>& matrix, size_t row, size_t value_index)
+  SparseMatrixIteratorImpl(MatrixType& matrix, size_t row, size_t value_index)
       : matrix_(matrix), current_row_(row), current_value_index_(value_index) {
     find_next_value();
   }
 
-  value_type operator*() {
+  ElementType operator*() const {
     const auto& row = matrix_.row(current_row_);
     size_t col = 0;
     size_t count = 0;
@@ -309,7 +279,9 @@ class SparseMatrixIterator {
         if (mask & (1U << bit)) {
           if (count == current_value_index_) {
             col = byte_pos * 8 + bit;
-            return value_type(current_row_, col, matrix_(current_row_, col));
+            return ElementType(
+                current_row_, col,
+                const_cast<MatrixType&>(matrix_)(current_row_, col));
           }
           ++count;
         }
@@ -318,98 +290,24 @@ class SparseMatrixIterator {
     throw std::runtime_error("Invalid iterator state");
   }
 
-  SparseMatrixIterator& operator++() {
+  SparseMatrixIteratorImpl& operator++() {
     ++current_value_index_;
     find_next_value();
     return *this;
   }
 
-  SparseMatrixIterator operator++(int) {
-    SparseMatrixIterator tmp = *this;
+  SparseMatrixIteratorImpl operator++(int) {
+    auto tmp = *this;
     ++(*this);
     return tmp;
   }
 
-  bool operator==(const SparseMatrixIterator& other) const {
+  bool operator==(const SparseMatrixIteratorImpl& other) const {
     return &matrix_ == &other.matrix_ && current_row_ == other.current_row_ &&
            current_value_index_ == other.current_value_index_;
   }
 
-  bool operator!=(const SparseMatrixIterator& other) const {
-    return !(*this == other);
-  }
-};
-
-template <typename T>
-class SparseMatrixConstIterator {
- private:
-  const SparseMatrix<T>& matrix_;
-  size_t current_row_;
-  size_t current_value_index_;
-
-  void find_next_value() {
-    while (current_row_ < matrix_.rows()) {
-      const auto& row = matrix_.row(current_row_);
-      if (current_value_index_ < row.value_count()) {
-        return;
-      }
-      ++current_row_;
-      current_value_index_ = 0;
-    }
-  }
-
- public:
-  using iterator_category = std::forward_iterator_tag;
-  using value_type = SparseConstElement<T>;
-  using difference_type = std::ptrdiff_t;
-  using pointer = value_type*;
-  using reference = value_type&;
-
-  SparseMatrixConstIterator(const SparseMatrix<T>& matrix, size_t row,
-                            size_t value_index)
-      : matrix_(matrix), current_row_(row), current_value_index_(value_index) {
-    find_next_value();
-  }
-
-  value_type operator*() const {
-    const auto& row = matrix_.row(current_row_);
-    size_t col = 0;
-    size_t count = 0;
-
-    for (size_t byte_pos = 0; byte_pos < (matrix_.cols() + 7) / 8; ++byte_pos) {
-      uint8_t mask = row.get_mask(byte_pos);
-      for (size_t bit = 0; bit < 8 && (byte_pos * 8 + bit) < matrix_.cols();
-           ++bit) {
-        if (mask & (1U << bit)) {
-          if (count == current_value_index_) {
-            col = byte_pos * 8 + bit;
-            return value_type(current_row_, col, matrix_(current_row_, col));
-          }
-          ++count;
-        }
-      }
-    }
-    throw std::runtime_error("Invalid iterator state");
-  }
-
-  SparseMatrixConstIterator& operator++() {
-    ++current_value_index_;
-    find_next_value();
-    return *this;
-  }
-
-  SparseMatrixConstIterator operator++(int) {
-    SparseMatrixConstIterator tmp = *this;
-    ++(*this);
-    return tmp;
-  }
-
-  bool operator==(const SparseMatrixConstIterator& other) const {
-    return &matrix_ == &other.matrix_ && current_row_ == other.current_row_ &&
-           current_value_index_ == other.current_value_index_;
-  }
-
-  bool operator!=(const SparseMatrixConstIterator& other) const {
+  bool operator!=(const SparseMatrixIteratorImpl& other) const {
     return !(*this == other);
   }
 };
