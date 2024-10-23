@@ -63,22 +63,22 @@ static void BM_SparseMatrixAccess(benchmark::State& state) {
 }
 
 // Benchmark for iterating over non-zero elements
-// static void BM_SparseMatrixIteration(benchmark::State& state) {
-//   const size_t size = state.range(0);
-//   const double density = 0.1;  // 1% non-zero elements
+static void BM_SparseMatrixIteration(benchmark::State& state) {
+  const size_t size = state.range(0);
+  const double density = 0.1;  // 1% non-zero elements
 
-//   qmutils::SparseMatrix<double> matrix(size, size);
-//   fill_sparse_matrix(matrix, density);
+  qmutils::SparseMatrix<double> matrix(size, size);
+  fill_sparse_matrix(matrix, density);
 
-//   for (auto _ : state) {
-//     double sum = 0.0;
-//     for (const auto& elem : matrix) {
-//       benchmark::DoNotOptimize(sum += elem.second);
-//     }
-//   }
+  for (auto _ : state) {
+    double sum = 0.0;
+    for (const auto& [row, col, value] : matrix) {
+      benchmark::DoNotOptimize(sum += value);
+    }
+  }
 
-//   state.SetComplexityN(size * size * density);
-// }
+  state.SetComplexityN(size * size * density);
+}
 
 BENCHMARK(BM_SparseMatrixInsertion)
     ->RangeMultiplier(2)
@@ -90,10 +90,10 @@ BENCHMARK(BM_SparseMatrixAccess)
     ->Range(1 << 7, 1 << 11)
     ->Complexity();
 
-// BENCHMARK(BM_SparseMatrixIteration)
-//     ->RangeMultiplier(2)
-//     ->Range(1 << 7, 1 << 11)
-//     ->Complexity();
+BENCHMARK(BM_SparseMatrixIteration)
+    ->RangeMultiplier(2)
+    ->Range(1 << 7, 1 << 11)
+    ->Complexity();
 
 }  // namespace
 }  // namespace qmutils

@@ -42,26 +42,26 @@ TEST(SparseMatrixTest, ComplexValues) {
   EXPECT_EQ(matrix(0, 1), std::complex<double>(0.0, 0.0));
 }
 
-// TEST(SparseMatrixTest, ClearAndIteration) {
-//   SparseMatrix<int> matrix(3, 3);
+TEST(SparseMatrixTest, ClearAndIteration) {
+  SparseMatrix<int> matrix(3, 3);
 
-//   matrix(0, 0) = 1;
-//   matrix(1, 1) = 2;
-//   matrix(2, 2) = 3;
+  matrix(0, 0) = 1;
+  matrix(1, 1) = 2;
+  matrix(2, 2) = 3;
 
-//   int sum = 0;
-//   for (const auto& entry : matrix) {
-//     sum += entry.second;
-//   }
-//   EXPECT_EQ(sum, 6);
+  int sum = 0;
+  for (const auto& [row, col, value] : matrix) {
+    sum += value;
+  }
+  EXPECT_EQ(sum, 6);
 
-//   matrix.clear();
-//   sum = 0;
-//   for (const auto& entry : matrix) {
-//     sum += entry.second;
-//   }
-//   EXPECT_EQ(sum, 0);
-// }
+  matrix.clear();
+  sum = 0;
+  for (const auto& [row, col, value] : matrix) {
+    sum += value;
+  }
+  EXPECT_EQ(sum, 0);
+}
 
 TEST(SparseMatrixTest, EmptyMatrix) {
   SparseMatrix<int> matrix(0, 0);
@@ -73,17 +73,30 @@ TEST(SparseMatrixTest, EmptyMatrix) {
   EXPECT_THROW(matrix(0, 0), std::out_of_range);
 }
 
-// TEST(SparseMatrixTest, ContainsElement) {
-//   SparseMatrix<int> matrix(3, 3);
+TEST(SparseMatrixTest, FindElement) {
+  SparseMatrix<int> matrix(3, 3);
 
-//   matrix(1, 1) = 5;
+  matrix(1, 2) = 5;
 
-//   EXPECT_TRUE(matrix.contains(1, 1));
-//   EXPECT_FALSE(matrix.contains(0, 0));
-//   EXPECT_FALSE(matrix.contains(2, 2));
+  EXPECT_EQ(matrix.find(0, 1), matrix.end());
+  EXPECT_EQ(matrix.find(2, 1), matrix.end());
+  EXPECT_NE(matrix.find(1, 2), matrix.end());
 
-//   EXPECT_THROW(matrix.contains(3, 3), std::out_of_range);
-// }
+  auto [row, col, value] = *matrix.find(1, 2);
+  EXPECT_EQ(row, 1);
+  EXPECT_EQ(col, 2);
+  EXPECT_EQ(value, 5);
+}
+
+TEST(SparseMatrixTest, ContainsElement) {
+  SparseMatrix<int> matrix(3, 3);
+
+  matrix(1, 1) = 5;
+
+  EXPECT_TRUE(matrix.contains(1, 1));
+  EXPECT_FALSE(matrix.contains(0, 0));
+  EXPECT_FALSE(matrix.contains(2, 2));
+}
 
 TEST(SparseMatrixTest, CountNonZero) {
   SparseMatrix<int> matrix(3, 3);
@@ -105,13 +118,16 @@ TEST(SparseMatrixTest, CountNonZero) {
   matrix(0, 0) = 5;
   EXPECT_EQ(matrix.non_zero_count(), 4);
 
-  // TODO: Setting an existing non-zero element to zero should decrease the
-  // count matrix(1, 1) = 0; EXPECT_EQ(matrix.non_zero_count(), 3);
+  // Setting an existing non-zero element to zero should decrease the
+  // count
+  matrix.set(1, 1, 0);
+  EXPECT_EQ(matrix.non_zero_count(), 3);
 
-  // TODO: Setting all elements to zero should result in a count of 0
-  // matrix(0, 0) = 0;
-  // matrix(2, 2) = 0;
-  // EXPECT_EQ(matrix.non_zero_count(), 0);
+  // Setting all elements to zero should result in a count of 0
+  matrix.set(0, 0, 0);
+  matrix.set(0, 1, 0);
+  matrix.set(2, 2, 0);
+  EXPECT_EQ(matrix.non_zero_count(), 0);
 }
 }  // namespace
 }  // namespace qmutils
