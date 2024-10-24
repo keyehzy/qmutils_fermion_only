@@ -1,6 +1,7 @@
 #pragma once
 
 #include <bitset>
+#include <complex>
 #include <cstdint>
 #include <iterator>
 #include <numeric>
@@ -11,6 +12,15 @@ namespace qmutils {
 
 template <typename T>
 class SparseMatrix;
+
+// Basic numeric sparse matrices
+using SpMat_i = SparseMatrix<int>;
+using SpMat_f = SparseMatrix<float>;
+using SpMat_d = SparseMatrix<double>;
+
+// Complex number sparse matrices
+using SpMat_cf = SparseMatrix<std::complex<float>>;
+using SpMat_cd = SparseMatrix<std::complex<double>>;
 
 template <typename T, bool IsConst>
 class SparseMatrixIteratorImpl;
