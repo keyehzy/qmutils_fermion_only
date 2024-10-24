@@ -49,6 +49,7 @@ MatrixType compute_matrix_elements(const Basis& basis, const Expression& A) {
 
       for (const auto& term : product.terms()) {
         size_t i = static_cast<size_t>(basis.index_of(term.first));
+#pragma omp critical
         matrix_elements(i, j) = term.second;
       }
     }

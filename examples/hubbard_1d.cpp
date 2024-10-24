@@ -1,5 +1,3 @@
-#include <armadillo>
-
 #include "qmutils/expression.h"
 #include "qmutils/matrix_elements.h"
 #include "qmutils/sparse_matrix.h"
@@ -52,7 +50,7 @@ int main() {
   HubbardChain1D chain(sites, 1.0f, 4.0f);
   qmutils::Basis basis(sites, particles);
 
-  auto mat = qmutils::compute_matrix_elements<arma::cx_fmat>(
+  auto mat = qmutils::compute_matrix_elements<qmutils::SpMat_cf>(
       basis, chain.hamiltonian());
 
   for (size_t i = 0; i < basis.size(); ++i) {

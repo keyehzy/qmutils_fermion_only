@@ -27,8 +27,6 @@ make
 ### Basic Usage
 
 ```cpp
-#include <armadillo>
-
 #include "qmutils/basis.h"
 #include "qmutils/expression.h"
 #include "qmutils/matrix_elements.h"
@@ -45,7 +43,7 @@ H += u * Term::density(Operator::Spin::Up, 0);      // Density term
 
 // Work with basis states
 Basis basis(4, 2);  // 4 orbitals, 2 particles
-auto matrix = compute_matrix_elements<arma::cx_fmat>(basis, H);
+auto matrix = compute_matrix_elements<SpMat_cf>(basis, H);
 ```
 
 See [examples](examples/) for more complex usages.
