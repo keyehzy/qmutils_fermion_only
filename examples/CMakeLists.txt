@@ -45,6 +45,7 @@ file(GLOB EXAMPLE_FILES
   fourier_transform_2d.cpp
   ssh_model.cpp
   frustrated_kagome.cpp
+  heisenberg_1d.cpp
 )
 
 foreach(EXAMPLE_FILE ${EXAMPLE_FILES})

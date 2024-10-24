@@ -170,8 +170,57 @@ class Expression {
   static Expression hopping(uint8_t from_orbital, uint8_t to_orbital,
                             Operator::Spin spin);
 
+  struct Spin;
+
  private:
   std::unordered_map<operators_type, coefficient_type> m_terms;
+};
+
+struct Expression::Spin {
+  static Expression spin_x(uint8_t i) {
+    Expression result;
+    result +=
+        0.5f * Term::one_body(Operator::Spin::Up, i, Operator::Spin::Down, i);
+    result +=
+        0.5f * Term::one_body(Operator::Spin::Down, i, Operator::Spin::Up, i);
+    return result;
+  }
+
+  static Expression spin_y(uint8_t i) {
+    Expression result;
+    result += std::complex<float>(0.0f, 0.5f) *
+              Term::one_body(Operator::Spin::Up, i, Operator::Spin::Down, i);
+    result -= std::complex<float>(0.0f, 0.5f) *
+              Term::one_body(Operator::Spin::Down, i, Operator::Spin::Up, i);
+    return result;
+  }
+
+  static Expression spin_z(uint8_t i) {
+    Expression result;
+    result +=
+        0.5f * Term::one_body(Operator::Spin::Up, i, Operator::Spin::Up, i);
+    result -=
+        0.5f * Term::one_body(Operator::Spin::Down, i, Operator::Spin::Down, i);
+    return result;
+  }
+
+  static Expression spin_plus(uint8_t site) {
+    return Expression(
+        Term::one_body(Operator::Spin::Up, site, Operator::Spin::Down, site));
+  }
+
+  static Expression spin_minus(uint8_t site) {
+    return Expression(
+        Term::one_body(Operator::Spin::Down, site, Operator::Spin::Up, site));
+  }
+
+  static Expression dot_product(uint8_t i, uint8_t j) {
+    Expression result;
+    result += spin_x(i) * spin_x(j);
+    result += spin_y(i) * spin_y(j);
+    result += spin_z(i) * spin_z(j);
+    return result;
+  }
 };
 
 }  // namespace qmutils
