@@ -19,6 +19,10 @@ class Heisenberg1D {
 
   Expression hamiltonian() const {
     Expression result;
+    for (uint8_t i = 0; i < m_sites; i++) {
+      result += -3e-3f * Expression::Spin::spin_z(i);
+    }
+
     for (uint8_t i = 0; i < m_sites; ++i) {
       result += m_J * Expression::Spin::dot_product(i, (i + 1) % m_sites);
     }
@@ -108,16 +112,16 @@ int main() {
 
     // Compute Hamiltonian matrix
     auto H_matrix =
-        compute_matrix_elements<arma::cx_fmat>(basis, model.hamiltonian());
+        compute_matrix_elements<arma::sp_cx_fmat>(basis, model.hamiltonian());
 
     // Find eigenvalues and eigenvectors
-    arma::fvec eigenvalues;
+    arma::cx_fvec eigenvalues;
     arma::cx_fmat eigenvectors;
-    arma::eig_sym(eigenvalues, eigenvectors, H_matrix);
+    arma::eigs_gen(eigenvalues, eigenvectors, H_matrix, 1, "sr");
 
     // Ground state is the eigenvector corresponding to lowest eigenvalue
     arma::cx_fvec ground_state = eigenvectors.col(0);
-    float ground_energy = eigenvalues(0);
+    float ground_energy = eigenvalues(0).real();
 
     std::cout << "Ground state energy per site: "
               << ground_energy / static_cast<float>(sites) << std::endl;
