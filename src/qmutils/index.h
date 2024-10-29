@@ -1,6 +1,52 @@
 #pragma once
 
+#include <sstream>
+
+#include "qmutils/operator.h"
+
 namespace qmutils {
+
+template <typename Coords>
+std::string operator_to_string(const Operator& op, const Coords& coords) {
+  std::ostringstream oss;
+  oss << (op.type() == Operator::Type::Creation ? "c+" : "c") << "("
+      << (op.spin() == Operator::Spin::Up ? "↑" : "↓") << ",[";
+
+  for (size_t i = 0; i < coords.size(); ++i) {
+    if (i > 0) oss << ",";
+    oss << coords[i];
+  }
+
+  oss << "])";
+  return oss.str();
+}
+
+template <typename Index>
+std::string term_to_string(const Term& term, const Index& index) {
+  std::ostringstream oss;
+  oss << term.coefficient() << " ";
+  for (Operator op : term.operators()) {
+    oss << operator_to_string(op, index.from_orbital(op.orbital()));
+  }
+  return oss.str();
+}
+
+template <typename Index>
+std::string expr_to_string(const Expression& expr, const Index& index) {
+  std::ostringstream oss;
+  bool first = true;
+  for (const auto& [ops, coeff] : expr.terms()) {
+    if (!first) {
+      oss << " + ";
+    }
+    first = false;
+    oss << coeff << " ";
+    for (Operator op : ops) {
+      oss << operator_to_string(op, index.from_orbital(op.orbital()));
+    }
+  }
+  return oss.str();
+}
 
 template <size_t... Dims>
 class StaticIndex {
@@ -59,6 +105,18 @@ class StaticIndex {
     return m_dimensions[i];
   }
 
+  [[nodiscard]] std::string to_string(const Operator& op) const {
+    return operator_to_string(op, from_orbital(op.orbital()));
+  }
+
+  [[nodiscard]] std::string to_string(const Term& term) const {
+    return term_to_string(term, *this);
+  }
+
+  [[nodiscard]] std::string to_string(const Expression& expr) const {
+    return expr_to_string(expr, *this);
+  }
+
  private:
   static constexpr std::array<size_t, Dimensions> m_dimensions = {Dims...};
 
@@ -115,6 +173,18 @@ class DynamicIndex {
   }
 
   size_t size() const { return total_size(); }
+
+  [[nodiscard]] std::string to_string(const Operator& op) const {
+    return operator_to_string(op, from_orbital(op.orbital()));
+  }
+
+  [[nodiscard]] std::string to_string(const Term& term) const {
+    return term_to_string(term, *this);
+  }
+
+  [[nodiscard]] std::string to_string(const Expression& expr) const {
+    return expr_to_string(expr, *this);
+  }
 
  private:
   std::vector<size_t> m_dimensions;
