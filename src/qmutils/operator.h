@@ -9,7 +9,7 @@ namespace qmutils {
 
 class Operator {
  public:
-  using int_type = uint8_t;
+  using int_type = uint16_t;
 
   enum class Type : int_type { Creation = 0, Annihilation = 1 };
   enum class Spin : int_type { Up = 0, Down = 1 };
@@ -75,7 +75,7 @@ class Operator {
                     orbital());
   }
 
-  std::string to_string() const;
+  [[nodiscard]] std::string to_string() const;
 
   [[nodiscard]] static constexpr Operator creation(Spin spin,
                                                    int_type orbital) noexcept {
@@ -103,7 +103,7 @@ class Operator {
 };
 static_assert(std::is_trivially_copyable_v<Operator>,
               "Operator must be trivially copyable");
-static_assert(sizeof(Operator) == 1, "Operator must be 1 byte in size");
+static_assert(sizeof(Operator) == 2, "Operator must be 2 byte in size");
 
 }  // namespace qmutils
 
