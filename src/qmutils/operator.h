@@ -9,10 +9,12 @@ namespace qmutils {
 
 class Operator {
  public:
-  enum class Type : uint8_t { Creation = 0, Annihilation = 1 };
-  enum class Spin : uint8_t { Up = 0, Down = 1 };
+  using int_type = uint8_t;
 
-  static constexpr uint8_t ORBITAL_BITFIELD_WIDTH = 6;
+  enum class Type : int_type { Creation = 0, Annihilation = 1 };
+  enum class Spin : int_type { Up = 0, Down = 1 };
+
+  static constexpr size_t ORBITAL_BITFIELD_WIDTH = sizeof(int_type) * 8 - 2;
 
   static constexpr size_t max_orbital_size() {
     return 1 << ORBITAL_BITFIELD_WIDTH;
@@ -20,15 +22,15 @@ class Operator {
 
   Operator() = default;
 
-  constexpr Operator(Type type, Spin spin, uint8_t orbital) noexcept
-      : data_{orbital, static_cast<uint8_t>(spin), static_cast<uint8_t>(type)} {
-  }
+  constexpr Operator(Type type, Spin spin, size_t orbital) noexcept
+      : data_{static_cast<int_type>(orbital), static_cast<int_type>(spin),
+              static_cast<int_type>(type)} {}
 
   [[nodiscard]] constexpr Type type() const noexcept {
     return static_cast<Type>(data_.type);
   }
 
-  [[nodiscard]] constexpr uint8_t orbital() const noexcept {
+  [[nodiscard]] constexpr size_t orbital() const noexcept {
     return data_.orbital;
   }
 
@@ -76,24 +78,24 @@ class Operator {
   std::string to_string() const;
 
   [[nodiscard]] static constexpr Operator creation(Spin spin,
-                                                   uint8_t orbital) noexcept {
+                                                   int_type orbital) noexcept {
     return Operator(Type::Creation, spin, orbital);
   }
 
   [[nodiscard]] static constexpr Operator annihilation(
-      Spin spin, uint8_t orbital) noexcept {
+      Spin spin, int_type orbital) noexcept {
     return Operator(Type::Annihilation, spin, orbital);
   }
 
-  [[nodiscard]] constexpr uint8_t data() const noexcept {
-    return std::bit_cast<uint8_t>(data_);
+  [[nodiscard]] constexpr int_type data() const noexcept {
+    return std::bit_cast<int_type>(data_);
   }
 
  private:
   struct Data {
-    uint8_t orbital : ORBITAL_BITFIELD_WIDTH;
-    uint8_t spin : 1;
-    uint8_t type : 1;
+    int_type orbital : ORBITAL_BITFIELD_WIDTH;
+    int_type spin : 1;
+    int_type type : 1;
   };
   static_assert(std::has_unique_object_representations_v<Data>);
 

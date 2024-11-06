@@ -118,8 +118,9 @@ inline Term operator*(const Term::coefficient_type& scalar, Term term) {
 template <>
 struct std::hash<qmutils::Term::container_type> {
   size_t operator()(const qmutils::Term::container_type& container) const {
-    auto begin = reinterpret_cast<const char*>(&container.data()[0]);
-    return xxh64::hash(begin, container.size(), 0);
+    const char* begin = reinterpret_cast<const char*>(&container.data()[0]);
+    size_t len = container.size() * sizeof(qmutils::Operator);
+    return xxh64::hash(begin, len, 0);
   }
 };
 
@@ -128,7 +129,9 @@ struct std::hash<qmutils::Term> {
   size_t operator()(const qmutils::Term& term) const {
     size_t seed = std::hash<float>{}(term.coefficient().real()) ^
                   std::hash<float>{}(term.coefficient().imag());
-    auto begin = reinterpret_cast<const char*>(&term.operators().data()[0]);
-    return xxh64::hash(begin, term.operators().size(), seed);
+    const char* begin =
+        reinterpret_cast<const char*>(&term.operators().data()[0]);
+    size_t len = term.operators().size() * sizeof(qmutils::Operator);
+    return xxh64::hash(begin, len, seed);
   }
 };
