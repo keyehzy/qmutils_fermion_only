@@ -30,6 +30,7 @@ class Basis {
 
   Basis(size_t orbitals, size_t particles)
       : m_orbitals(orbitals), m_particles(particles) {
+    QMUTILS_ASSERT(orbitals <= Operator::max_orbital_size());
     QMUTILS_ASSERT(particles <= 2 * orbitals);
     m_index_map.reserve(qmutils_choose(2 * orbitals, particles));
     generate_basis();
