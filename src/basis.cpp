@@ -13,7 +13,7 @@ void Basis::generate_combinations(operators_type& current, size_t first_orbital,
   if (depth == m_particles) {
     operators_type current_copy(current);
     std::sort(current_copy.begin(), current_copy.end());
-    m_index_map.push_back(current_copy);
+    m_index_map.emplace_back(current_copy);
     return;
   }
 

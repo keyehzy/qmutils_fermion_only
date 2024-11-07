@@ -36,7 +36,7 @@ class Basis {
     generate_basis();
     QMUTILS_ASSERT(m_index_map.size() ==
                    qmutils_choose(2 * orbitals, particles));
-    std::sort(m_index_map.begin(), m_index_map.end());
+    std::sort(m_index_map.begin(), m_index_map.end(), term_sorter);
   }
 
   Basis(const Basis&) = default;
@@ -58,27 +58,31 @@ class Basis {
   bool operator!=(const Basis& other) const { return !(*this == other); }
 
   bool contains(const operators_type& value) const {
-    auto it = std::lower_bound(m_index_map.begin(), m_index_map.end(), value);
-    return it != m_index_map.end() && *it == value;
+    auto it = std::lower_bound(m_index_map.begin(), m_index_map.end(),
+                               Term(value), term_sorter);
+    return it != m_index_map.end() && it->operators() == value;
   }
 
   // TODO: needs testing
   ptrdiff_t index_of(const operators_type& value) const {
     QMUTILS_ASSERT(contains(value));
-    auto it = std::lower_bound(m_index_map.begin(), m_index_map.end(), value);
+    auto it = std::lower_bound(m_index_map.begin(), m_index_map.end(),
+                               Term(value), term_sorter);
     return std::distance(m_index_map.begin(), it);
   }
 
   void insert(const operators_type& value) {
     QMUTILS_ASSERT(!contains(value));
-    auto it = std::lower_bound(m_index_map.begin(), m_index_map.end(), value);
-    m_index_map.insert(it, value);
+    Term term(value);
+    auto it = std::lower_bound(m_index_map.begin(), m_index_map.end(), term,
+                               term_sorter);
+    m_index_map.insert(it, term);
   }
 
   auto begin() const noexcept { return m_index_map.begin(); }
   auto end() const noexcept { return m_index_map.end(); }
 
-  auto at(size_t i) const noexcept {
+  const Term& at(size_t i) const noexcept {
     QMUTILS_ASSERT(i < m_index_map.size());
     return m_index_map[i];
   }
@@ -89,9 +93,13 @@ class Basis {
   void generate_combinations(operators_type& current, size_t first_orbital,
                              size_t depth);
 
+  static bool term_sorter(const Term& a, const Term& b) noexcept {
+    return a.operators() < b.operators();
+  }
+
   size_t m_orbitals;
   size_t m_particles;
-  std::vector<operators_type> m_index_map;
+  std::vector<Term> m_index_map;
 };
 
 }  // namespace qmutils
