@@ -34,10 +34,9 @@ Expression NormalOrderer::normal_order_iterative(const operators_type& ops) {
     }
 
     auto ops_key = std::hash<operators_type>{}(current);
-    Expression cached_result;
-    if (m_cache.get(ops_key, cached_result)) {
+    if (auto cached_result = m_cache.get(ops_key)) {
       m_cache_hits++;
-      result += phase * cached_result;
+      result += phase * cached_result.value();
       continue;
     }
     m_cache_misses++;
@@ -83,10 +82,9 @@ Expression NormalOrderer::normal_order_recursive(operators_type ops) {
   }
 
   auto ops_key = std::hash<operators_type>{}(ops);
-  Expression cached_result;
-  if (m_cache.get(ops_key, cached_result)) {
+  if (auto cached_result = m_cache.get(ops_key)) {
     m_cache_hits++;
-    return cached_result;
+    return cached_result.value();
   }
   m_cache_misses++;
 
