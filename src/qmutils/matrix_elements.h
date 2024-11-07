@@ -8,7 +8,7 @@
 
 namespace qmutils {
 
-template <typename MatrixType>
+template <typename MatrixType, typename Basis>
 MatrixType compute_matrix_elements_serial(const Basis& basis,
                                           const Expression& A) {
   MatrixType matrix_elements(basis.size(), basis.size());
@@ -24,14 +24,14 @@ MatrixType compute_matrix_elements_serial(const Basis& basis,
 
     for (const auto& term : product.terms()) {
       size_t i = static_cast<size_t>(basis.index_of(term.first));
-      matrix_elements(i, j) = term.second / basis.at(i).coefficient();
+      matrix_elements(i, j) = term.second;
     }
   }
 
   return matrix_elements;
 }
 
-template <typename MatrixType>
+template <typename MatrixType, typename Basis>
 MatrixType compute_matrix_elements(const Basis& basis, const Expression& A) {
   MatrixType matrix_elements(basis.size(), basis.size());
 
@@ -53,7 +53,7 @@ MatrixType compute_matrix_elements(const Basis& basis, const Expression& A) {
 
       for (const auto& term : product.terms()) {
         size_t i = static_cast<size_t>(basis.index_of(term.first));
-        local_updates.emplace_back(i, term.second / basis.at(i).coefficient());
+        local_updates.emplace_back(i, term.second);
       }
 
 #pragma omp critical

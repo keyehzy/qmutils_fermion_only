@@ -76,12 +76,14 @@ class Operator {
 
   [[nodiscard]] constexpr Operator adjoint() const noexcept {
     return Operator(static_cast<Type>(!data_.type),
-                    static_cast<Spin>(data_.spin), data_.orbital);
+                    static_cast<Spin>(data_.spin), data_.orbital,
+                    static_cast<Statistics>(data_.statistics));
   }
 
   [[nodiscard]] constexpr Operator flip_spin() const noexcept {
-    return Operator(type(), spin() == Spin::Up ? Spin::Down : Spin::Up,
-                    orbital());
+    return Operator(static_cast<Type>(data_.type),
+                    static_cast<Spin>(!data_.spin), data_.orbital,
+                    static_cast<Statistics>(data_.statistics));
   }
 
   [[nodiscard]] std::string to_string() const;

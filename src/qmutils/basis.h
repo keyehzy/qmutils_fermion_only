@@ -1,7 +1,7 @@
 #pragma once
 
 #include <algorithm>
-#include <unordered_set>
+#include <unordered_map>
 
 #include "qmutils/assert.h"
 #include "qmutils/operator.h"
@@ -24,38 +24,30 @@ static constexpr uint64_t qmutils_choose(uint64_t n, uint64_t m) {
   return result;
 }
 
-class Basis {
+class BasisBase {
  public:
   using operators_type = Term::container_type;
 
-  Basis(size_t orbitals, size_t particles)
-      : m_orbitals(orbitals), m_particles(particles) {
-    QMUTILS_ASSERT(orbitals <= Operator::max_orbital_size());
-    QMUTILS_ASSERT(particles <= 2 * orbitals);
-    m_index_map.reserve(qmutils_choose(2 * orbitals, particles));
-    generate_basis();
-    QMUTILS_ASSERT(m_index_map.size() ==
-                   qmutils_choose(2 * orbitals, particles));
-    std::sort(m_index_map.begin(), m_index_map.end(), term_sorter);
-  }
+  BasisBase(size_t orbitals, size_t particles)
+      : m_orbitals(orbitals), m_particles(particles) {}
 
-  Basis(const Basis&) = default;
-  Basis& operator=(const Basis&) = default;
-  Basis(Basis&&) noexcept = default;
-  Basis& operator=(Basis&&) noexcept = default;
+  BasisBase(const BasisBase&) = default;
+  BasisBase& operator=(const BasisBase&) = default;
+  BasisBase(BasisBase&&) noexcept = default;
+  BasisBase& operator=(BasisBase&&) noexcept = default;
 
-  ~Basis() = default;
+  virtual ~BasisBase() = default;
 
   size_t orbitals() const noexcept { return m_orbitals; }
   size_t particles() const noexcept { return m_particles; }
   size_t size() const noexcept { return m_index_map.size(); }
 
-  bool operator==(const Basis& other) const {
+  bool operator==(const BasisBase& other) const {
     return m_orbitals == other.m_orbitals && m_particles == other.m_particles &&
            m_index_map == other.m_index_map;
   }
 
-  bool operator!=(const Basis& other) const { return !(*this == other); }
+  bool operator!=(const BasisBase& other) const { return !(*this == other); }
 
   bool contains(const operators_type& value) const {
     auto it = std::lower_bound(m_index_map.begin(), m_index_map.end(),
@@ -87,19 +79,85 @@ class Basis {
     return m_index_map[i];
   }
 
- private:
   void generate_basis();
 
-  void generate_combinations(operators_type& current, size_t first_orbital,
-                             size_t depth);
+  virtual void generate_combinations(operators_type& current,
+                                     size_t first_orbital, size_t depth) = 0;
 
   static bool term_sorter(const Term& a, const Term& b) noexcept {
     return a.operators() < b.operators();
   }
 
+ protected:
+  std::vector<Term> m_index_map;
   size_t m_orbitals;
   size_t m_particles;
-  std::vector<Term> m_index_map;
 };
+
+class FermionicBasis : public BasisBase {
+ public:
+  FermionicBasis(size_t orbitals, size_t particles)
+      : BasisBase(orbitals, particles) {
+    QMUTILS_ASSERT(orbitals <= Operator::max_orbital_size());
+    QMUTILS_ASSERT(particles <= 2 * orbitals);
+    size_t basis_size = compute_basis_size(orbitals, particles);
+    m_index_map.reserve(basis_size);
+    generate_basis();
+    QMUTILS_ASSERT(m_index_map.size() == basis_size);
+    std::sort(m_index_map.begin(), m_index_map.end(), term_sorter);
+  }
+
+  void generate_combinations(operators_type& current, size_t first_orbital,
+                             size_t depth) override;
+
+ private:
+  static float calculate_normalization(
+      [[maybe_unused]] const operators_type& ops) {
+    return 1.0f;
+  }
+
+  static constexpr uint64_t compute_basis_size(uint64_t orbitals,
+                                               uint64_t particles) {
+    return qmutils_choose(2 * orbitals, particles);
+  }
+};
+
+class BosonicBasis : public BasisBase {
+ public:
+  BosonicBasis(size_t orbitals, size_t particles)
+      : BasisBase(orbitals, particles) {
+    QMUTILS_ASSERT(orbitals <= Operator::max_orbital_size());
+    size_t basis_size = compute_basis_size(orbitals, particles);
+    m_index_map.reserve(basis_size);
+    generate_basis();
+    QMUTILS_ASSERT(m_index_map.size() == basis_size);
+    std::sort(m_index_map.begin(), m_index_map.end(), term_sorter);
+  }
+
+  void generate_combinations(operators_type& current, size_t first_orbital,
+                             size_t depth) override;
+
+ private:
+  static float calculate_normalization(const operators_type& ops) {
+    std::unordered_map<Operator, size_t> state_counts;
+    state_counts.reserve(ops.size());
+    for (const auto& op : ops) {
+      state_counts[op]++;
+    }
+    float normalization = 1.0f;
+    for (const auto& [op, count] : state_counts) {
+      // gamma(n + 1) = n!
+      normalization *= std::sqrt(std::tgamma(static_cast<float>(count) + 1.0f));
+    }
+    return 1.0f / normalization;
+  }
+
+  static constexpr uint64_t compute_basis_size(uint64_t orbitals,
+                                               uint64_t particles) {
+    return qmutils_choose(orbitals + particles - 1, particles);
+  }
+};
+
+using Basis = FermionicBasis;
 
 }  // namespace qmutils
