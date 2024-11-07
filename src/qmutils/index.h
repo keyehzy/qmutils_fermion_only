@@ -59,7 +59,7 @@ class StaticIndex {
   }
 
   template <typename... Coords>
-  [[nodiscard]] constexpr uint8_t to_orbital(Coords... coords) const {
+  [[nodiscard]] constexpr size_t to_orbital(Coords... coords) const {
     static_assert(sizeof...(coords) == Dimensions,
                   "Invalid number of coordinates");
     std::array<size_t, Dimensions> coordinates = {
@@ -71,17 +71,17 @@ class StaticIndex {
       }
     }
 
-    uint8_t orbital = 0;
+    size_t orbital = 0;
     size_t multiplier = 1;
     for (size_t i = 0; i < Dimensions; ++i) {
-      orbital += static_cast<uint8_t>(coordinates[i] * multiplier);
+      orbital += static_cast<size_t>(coordinates[i] * multiplier);
       multiplier *= m_dimensions[i];
     }
     return orbital;
   }
 
   [[nodiscard]] constexpr std::array<size_t, Dimensions> from_orbital(
-      uint8_t orbital) const {
+      size_t orbital) const {
     if (orbital >= total_size()) {
       throw std::out_of_range("Orbital index out of bounds");
     }
@@ -132,25 +132,25 @@ class DynamicIndex {
     }
   }
 
-  [[nodiscard]] uint8_t to_orbital(
+  [[nodiscard]] size_t to_orbital(
       const std::vector<size_t>& coordinates) const {
     if (coordinates.size() != m_dimensions.size()) {
       throw std::out_of_range("Invalid number of coordinates");
     }
 
-    uint8_t orbital = 0;
+    size_t orbital = 0;
     size_t multiplier = 1;
     for (size_t i = 0; i < m_dimensions.size(); ++i) {
       if (coordinates[i] >= m_dimensions[i]) {
         throw std::out_of_range("Coordinates out of bounds");
       }
-      orbital += static_cast<uint8_t>(coordinates[i] * multiplier);
+      orbital += coordinates[i] * multiplier;
       multiplier *= m_dimensions[i];
     }
     return orbital;
   }
 
-  [[nodiscard]] std::vector<size_t> from_orbital(uint8_t orbital) const {
+  [[nodiscard]] std::vector<size_t> from_orbital(size_t orbital) const {
     if (orbital >= total_size()) {
       throw std::out_of_range("Orbital index out of bounds");
     }

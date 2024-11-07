@@ -57,8 +57,8 @@ class KagomeModel {
 
   void add_hopping_term(size_t x1, size_t y1, size_t site1, size_t x2,
                         size_t y2, size_t site2) {
-    uint8_t orbital1 = m_index.to_orbital(x1, y1, site1);
-    uint8_t orbital2 = m_index.to_orbital(x2, y2, site2);
+    size_t orbital1 = m_index.to_orbital(x1, y1, site1);
+    size_t orbital2 = m_index.to_orbital(x2, y2, site2);
 
     // Add hopping for both spin up and spin down
     m_hamiltonian +=
@@ -128,7 +128,7 @@ class KagomeCompactState {
          {cx, cy, 0, -norm}}};
 
     for (const auto& site : cls_sites) {
-      uint8_t orbital =
+      size_t orbital =
           model.lattice().to_orbital(site.x % Lx, site.y % Ly, site.site_index);
       state += site.amplitude * Term::creation(Operator::Spin::Up, orbital);
     }
