@@ -40,6 +40,13 @@ TEST(OperatorTest, CommutationRelations) {
   EXPECT_FALSE(c_up_5.commutes_with(a_up_5));
 }
 
+TEST(OperatorTest, COmmutationRelationBetweenOperatorsWithDifferentStatistics) {
+  Operator fermion_up_5 = Operator::Fermion::creation(Operator::Spin::Up, 5);
+  Operator boson_up_5 = Operator::Boson::annihilation(Operator::Spin::Up, 5);
+
+  EXPECT_TRUE(fermion_up_5.commutes_with(boson_up_5));
+}
+
 TEST(OperatorTest, AdjointOperation) {
   Operator c_up_5 = Operator::creation(Operator::Spin::Up, 5);
   Operator a_up_5 = Operator::annihilation(Operator::Spin::Up, 5);
@@ -76,5 +83,6 @@ TEST(OperatorTest, OperatorFlipSpin) {
   EXPECT_EQ(op_up.flip_spin(), Operator::creation(Operator::Spin::Down, 0));
   EXPECT_EQ(op_down.flip_spin(), Operator::annihilation(Operator::Spin::Up, 1));
 }
+
 }  // namespace
 }  // namespace qmutils
