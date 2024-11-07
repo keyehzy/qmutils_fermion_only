@@ -26,7 +26,8 @@ class NormalOrderer {
  private:
   Expression normal_order_iterative(const operators_type& ops);
   Expression normal_order_recursive(operators_type ops);
-  Expression handle_non_commuting(const operators_type& ops, size_t index);
+  Expression handle_non_commuting(const operators_type& ops, size_t index,
+                                  float sign);
 
   LRUCache<size_t, Expression> m_cache{1 << 20};
 

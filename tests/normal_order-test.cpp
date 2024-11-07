@@ -47,6 +47,18 @@ TEST_F(NormalOrderTest, TwoCommutingOperatorsOutOfOrder) {
                 {c(Operator::Spin::Up, 0), c(Operator::Spin::Down, 1)}));
 }
 
+TEST_F(NormalOrderTest, TwoCommutingMixedOperatorsOutOfOrder) {
+  Term term({Operator::Fermion::creation(Operator::Spin::Down, 1),
+             Operator::Boson::creation(Operator::Spin::Up, 0)});
+  Expression result = orderer.normal_order(term);
+  EXPECT_EQ(result.size(), 1);
+  EXPECT_EQ(result.terms().begin()->second, Term::coefficient_type(1.0f, 0.0f));
+  EXPECT_EQ(result.terms().begin()->first,
+            Term::container_type(
+                {Operator::Fermion::creation(Operator::Spin::Down, 1),
+                 Operator::Boson::creation(Operator::Spin::Up, 0)}));
+}
+
 TEST_F(NormalOrderTest, TwoNonCommutingOperators) {
   Term term({a(Operator::Spin::Up, 0), c(Operator::Spin::Up, 0)});
   Expression result = orderer.normal_order(term);
@@ -56,6 +68,40 @@ TEST_F(NormalOrderTest, TwoNonCommutingOperators) {
   EXPECT_EQ(it->second, Term::coefficient_type(-1.0f, 0.0f));
   EXPECT_EQ(it->first, Term::container_type({c(Operator::Spin::Up, 0),
                                              a(Operator::Spin::Up, 0)}));
+  ++it;
+  EXPECT_EQ(it->second, Term::coefficient_type(1.0f, 0.0f));
+  EXPECT_EQ(it->first, Term::container_type());
+}
+
+TEST_F(NormalOrderTest, TwoNonCommutingFermionicOperators) {
+  Term term({Operator::Fermion::annihilation(Operator::Spin::Up, 0),
+             Operator::Fermion::creation(Operator::Spin::Up, 0)});
+  Expression result = orderer.normal_order(term);
+  EXPECT_EQ(result.size(), 2);
+
+  auto it = result.terms().begin();
+  EXPECT_EQ(it->second, Term::coefficient_type(-1.0f, 0.0f));
+  EXPECT_EQ(it->first,
+            Term::container_type(
+                {Operator::Fermion::creation(Operator::Spin::Up, 0),
+                 Operator::Fermion::annihilation(Operator::Spin::Up, 0)}));
+  ++it;
+  EXPECT_EQ(it->second, Term::coefficient_type(1.0f, 0.0f));
+  EXPECT_EQ(it->first, Term::container_type());
+}
+
+TEST_F(NormalOrderTest, TwoNonCommutingBosonicOperators) {
+  Term term({Operator::Boson::annihilation(Operator::Spin::Up, 0),
+             Operator::Boson::creation(Operator::Spin::Up, 0)});
+  Expression result = orderer.normal_order(term);
+  EXPECT_EQ(result.size(), 2);
+
+  auto it = result.terms().begin();
+  EXPECT_EQ(it->second, Term::coefficient_type(1.0f, 0.0f));
+  EXPECT_EQ(it->first,
+            Term::container_type(
+                {Operator::Boson::creation(Operator::Spin::Up, 0),
+                 Operator::Boson::annihilation(Operator::Spin::Up, 0)}));
   ++it;
   EXPECT_EQ(it->second, Term::coefficient_type(1.0f, 0.0f));
   EXPECT_EQ(it->first, Term::container_type());

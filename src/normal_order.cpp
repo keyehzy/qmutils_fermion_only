@@ -16,6 +16,10 @@ Expression NormalOrderer::normal_order(const Expression& expr) {
   return result;
 }
 
+static float phase_factor(const Operator& a, const Operator& b) {
+  return Operator::is_fermion(a) && Operator::is_fermion(b) ? -1.0f : 1.0f;
+}
+
 Expression NormalOrderer::normal_order_iterative(const operators_type& ops) {
   Expression result;
   m_queue.emplace(ops, 1.0);
@@ -43,9 +47,10 @@ Expression NormalOrderer::normal_order_iterative(const operators_type& ops) {
     for (size_t i = 1; i < current.size(); ++i) {
       size_t j = i;
       while (j > 0 && current[j] < current[j - 1]) {
+        float sign = phase_factor(current[j], current[j - 1]);
         if (current[j].commutes_with(current[j - 1])) {
           std::swap(current[j], current[j - 1]);
-          phase *= -1.0;
+          phase *= sign;
           --j;
         } else {
           is_sorted = false;
@@ -56,7 +61,7 @@ Expression NormalOrderer::normal_order_iterative(const operators_type& ops) {
 
           operators_type swapped(current);
           std::swap(swapped[j - 1], swapped[j]);
-          m_queue.emplace(std::move(swapped), -phase);
+          m_queue.emplace(std::move(swapped), sign * phase);
           break;
         }
       }
@@ -89,12 +94,13 @@ Expression NormalOrderer::normal_order_recursive(operators_type ops) {
   for (size_t i = 1; i < ops.size(); ++i) {
     size_t j = i;
     while (j > 0 && ops[j] < ops[j - 1]) {
+      float sign = phase_factor(ops[j], ops[j - 1]);
       if (ops[j].commutes_with(ops[j - 1])) {
         std::swap(ops[j], ops[j - 1]);
-        phase *= -1.0;
+        phase *= sign;
         --j;
       } else {
-        Expression result = phase * handle_non_commuting(ops, j - 1);
+        Expression result = phase * handle_non_commuting(ops, j - 1, sign);
         m_cache.put(ops_key, result);
         return result;
       }
@@ -107,12 +113,13 @@ Expression NormalOrderer::normal_order_recursive(operators_type ops) {
 }
 
 Expression NormalOrderer::handle_non_commuting(const operators_type& ops,
-                                               size_t index) {
+                                               size_t index, float sign) {
   operators_type contracted(ops);
   contracted.erase(contracted.begin() + index, contracted.begin() + index + 2);
   operators_type swapped(ops);
   std::swap(swapped[index], swapped[index + 1]);
-  return normal_order_recursive(contracted) - normal_order_recursive(swapped);
+  return normal_order_recursive(contracted) +
+         sign * normal_order_recursive(swapped);
 }
 
 void NormalOrderer::print_cache_stats() const {

@@ -100,6 +100,14 @@ class Operator {
     return std::bit_cast<int_type>(data_);
   }
 
+  static constexpr bool is_fermion(Operator op) noexcept {
+    return op.statistics() == Statistics::Fermionic;
+  }
+
+  static constexpr bool is_boson(Operator op) noexcept {
+    return op.statistics() == Statistics::Bosonic;
+  }
+
   struct Fermion;
   struct Boson;
 
