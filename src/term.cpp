@@ -34,21 +34,21 @@ std::string Term::to_string() const {
   return oss.str();
 }
 
-Term Term::creation(Operator::Spin spin, uint8_t orbital) {
+Term Term::creation(Operator::Spin spin, size_t orbital) {
   return Term(1.0f, {Operator::creation(spin, orbital)});
 }
 
-Term Term::annihilation(Operator::Spin spin, uint8_t orbital) {
+Term Term::annihilation(Operator::Spin spin, size_t orbital) {
   return Term(1.0f, {Operator::annihilation(spin, orbital)});
 }
 
-Term Term::one_body(Operator::Spin spin1, uint8_t orbital1,
-                    Operator::Spin spin2, uint8_t orbital2) {
+Term Term::one_body(Operator::Spin spin1, size_t orbital1, Operator::Spin spin2,
+                    size_t orbital2) {
   return Term(1.0f, {Operator::creation(spin1, orbital1),
                      Operator::annihilation(spin2, orbital2)});
 }
 
-Term Term::density(Operator::Spin spin, uint8_t orbital) {
+Term Term::density(Operator::Spin spin, size_t orbital) {
   return Term::one_body(spin, orbital, spin, orbital);
 }
 

@@ -83,11 +83,11 @@ class Term {
 
   std::string to_string() const;
 
-  static Term creation(Operator::Spin spin, uint8_t orbital);
-  static Term annihilation(Operator::Spin spin, uint8_t orbital);
-  static Term one_body(Operator::Spin spin1, uint8_t orbital1,
-                       Operator::Spin spin2, uint8_t orbital2);
-  static Term density(Operator::Spin spin, uint8_t orbital);
+  static Term creation(Operator::Spin spin, size_t orbital);
+  static Term annihilation(Operator::Spin spin, size_t orbital);
+  static Term one_body(Operator::Spin spin1, size_t orbital1,
+                       Operator::Spin spin2, size_t orbital2);
+  static Term density(Operator::Spin spin, size_t orbital);
 
  private:
   coefficient_type m_coefficient;

@@ -62,7 +62,7 @@ Expression Expression::flip_spin() const {
   return result;
 }
 
-Expression Expression::hopping(uint8_t from_orbital, uint8_t to_orbital,
+Expression Expression::hopping(size_t from_orbital, size_t to_orbital,
                                Operator::Spin spin) {
   QMUTILS_ASSERT(from_orbital != to_orbital);
   Expression result;

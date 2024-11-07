@@ -27,8 +27,8 @@ class HubbardChain1D {
 
 void HubbardChain1D::construct_hamiltonian() {
   // Hopping terms
-  for (uint8_t i = 0; i < m_sites; ++i) {
-    uint8_t j = (i + 1) % m_sites;  // Periodic boundary conditions
+  for (size_t i = 0; i < m_sites; ++i) {
+    size_t j = (i + 1) % m_sites;  // Periodic boundary conditions
     m_hamiltonian +=
         qmutils::Expression::hopping(i, j, qmutils::Operator::Spin::Up);
     m_hamiltonian +=
@@ -36,7 +36,7 @@ void HubbardChain1D::construct_hamiltonian() {
   }
 
   // On-site interaction terms
-  for (uint8_t i = 0; i < m_sites; ++i) {
+  for (size_t i = 0; i < m_sites; ++i) {
     m_hamiltonian += qmutils::Term::density(qmutils::Operator::Spin::Up, i) *
                      qmutils::Term::density(qmutils::Operator::Spin::Down, i) *
                      m_U;

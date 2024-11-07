@@ -5,6 +5,8 @@
 #include <string>
 #include <type_traits>
 
+#include "assert.h"
+
 namespace qmutils {
 
 class Operator {
@@ -28,7 +30,9 @@ class Operator {
       : data_{.orbital = static_cast<int_type>(orbital),
               .spin = static_cast<int_type>(spin),
               .type = static_cast<int_type>(type),
-              .statistics = static_cast<int_type>(stat)} {}
+              .statistics = static_cast<int_type>(stat)} {
+    QMUTILS_ASSERT(orbital <= max_orbital_size());
+  }
 
   [[nodiscard]] constexpr Type type() const noexcept {
     return static_cast<Type>(data_.type);

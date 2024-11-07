@@ -25,8 +25,8 @@ class SSHModel {
     auto hopping = [this](size_t unit_cell_1, size_t size_1, size_t unit_cell_2,
                           size_t site_2, float t) {
       Expression term;
-      uint8_t orbital1 = m_index.to_orbital(unit_cell_1, size_1);
-      uint8_t orbital2 = m_index.to_orbital(unit_cell_2, site_2);
+      size_t orbital1 = m_index.to_orbital(unit_cell_1, size_1);
+      size_t orbital2 = m_index.to_orbital(unit_cell_2, site_2);
       term += t * Expression::hopping(orbital1, orbital2, Operator::Spin::Up);
       term += t * Expression::hopping(orbital1, orbital2, Operator::Spin::Down);
       return term;
@@ -35,12 +35,12 @@ class SSHModel {
     const size_t L = m_index.dimension(0);
 
     // Intra-cell hopping
-    for (uint8_t i = 0; i < L; ++i) {
+    for (size_t i = 0; i < L; ++i) {
       H += hopping(i, 0, i, 1, m_t1 + m_delta);
     }
 
     // Inter-cell hopping
-    for (uint8_t i = 0; i < L; ++i) {
+    for (size_t i = 0; i < L; ++i) {
       H += hopping(i, 1, (i + 1) % L, 0, m_t2 - m_delta);
     }
 
@@ -100,7 +100,7 @@ static Expression transform_operator_to_band_basis(
                                     : std::conj(eigenvectors(i, k));
     // Get spin and orbital indices from basis index k
     Operator::Spin spin = basis.at(k)[0].spin();
-    uint8_t orbital = basis.at(k)[0].orbital();
+    size_t orbital = basis.at(k)[0].orbital();
     Term new_term(coeff, {Operator(op.type(), spin, orbital)});
     result += new_term;
   }

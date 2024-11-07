@@ -20,8 +20,8 @@ class Hubbard1DModel {
     qmutils::Expression H;
 
     // Hopping terms
-    for (uint8_t i = 0; i < m_sites; ++i) {
-      uint8_t j = (i + 1) % m_sites;  // Periodic boundary conditions
+    for (size_t i = 0; i < m_sites; ++i) {
+      size_t j = (i + 1) % m_sites;  // Periodic boundary conditions
       H += -m_t *
            qmutils::Expression::hopping(i, j, qmutils::Operator::Spin::Up);
       H += -m_t *
@@ -29,7 +29,7 @@ class Hubbard1DModel {
     }
 
     // Mean-field interaction terms
-    for (uint8_t i = 0; i < m_sites; ++i) {
+    for (size_t i = 0; i < m_sites; ++i) {
       H += m_U * down_occupations[i] *
            qmutils::Term::density(qmutils::Operator::Spin::Up, i);
       H += m_U * up_occupations[i] *

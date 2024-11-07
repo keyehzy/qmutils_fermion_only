@@ -17,14 +17,14 @@ class Index2D {
     }
   }
 
-  uint8_t to_orbital(size_t x, size_t y) const {
+  size_t to_orbital(size_t x, size_t y) const {
     if (x >= m_width || y >= m_height) {
       throw std::out_of_range("Coordinates out of lattice bounds");
     }
-    return static_cast<uint8_t>(y * m_width + x);
+    return y * m_width + x;
   }
 
-  std::pair<size_t, size_t> from_orbital(uint8_t orbital) const {
+  std::pair<size_t, size_t> from_orbital(size_t orbital) const {
     if (orbital >= m_width * m_height) {
       throw std::out_of_range("Orbital index out of lattice bounds");
     }
@@ -55,10 +55,10 @@ class TightBindingModel2D {
   Expression m_hamiltonian;
 
   void construct_hamiltonian() {
-    for (uint8_t y = 0; y < m_index.height(); ++y) {
-      for (uint8_t x = 0; x < m_index.width(); ++x) {
+    for (size_t y = 0; y < m_index.height(); ++y) {
+      for (size_t x = 0; x < m_index.width(); ++x) {
         // Horizontal hopping
-        uint8_t next_x = (x + 1) % m_index.width();
+        size_t next_x = (x + 1) % m_index.width();
         m_hamiltonian +=
             m_t * Expression::hopping(m_index.to_orbital(x, y),
                                       m_index.to_orbital(next_x, y),
@@ -69,7 +69,7 @@ class TightBindingModel2D {
                                       Operator::Spin::Down);
 
         // Vertical hopping
-        uint8_t next_y = (y + 1) % m_index.height();
+        size_t next_y = (y + 1) % m_index.height();
         m_hamiltonian +=
             m_t * Expression::hopping(m_index.to_orbital(x, y),
                                       m_index.to_orbital(x, next_y),

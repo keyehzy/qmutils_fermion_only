@@ -167,7 +167,7 @@ class Expression {
 
   Expression flip_spin() const;
 
-  static Expression hopping(uint8_t from_orbital, uint8_t to_orbital,
+  static Expression hopping(size_t from_orbital, size_t to_orbital,
                             Operator::Spin spin);
 
   struct Spin;
@@ -177,7 +177,7 @@ class Expression {
 };
 
 struct Expression::Spin {
-  static Expression spin_x(uint8_t i) {
+  static Expression spin_x(size_t i) {
     Expression result;
     result +=
         0.5f * Term::one_body(Operator::Spin::Up, i, Operator::Spin::Down, i);
@@ -186,7 +186,7 @@ struct Expression::Spin {
     return result;
   }
 
-  static Expression spin_y(uint8_t i) {
+  static Expression spin_y(size_t i) {
     Expression result;
     result += std::complex<float>(0.0f, 0.5f) *
               Term::one_body(Operator::Spin::Up, i, Operator::Spin::Down, i);
@@ -195,7 +195,7 @@ struct Expression::Spin {
     return result;
   }
 
-  static Expression spin_z(uint8_t i) {
+  static Expression spin_z(size_t i) {
     Expression result;
     result +=
         0.5f * Term::one_body(Operator::Spin::Up, i, Operator::Spin::Up, i);
@@ -204,17 +204,17 @@ struct Expression::Spin {
     return result;
   }
 
-  static Expression spin_plus(uint8_t site) {
+  static Expression spin_plus(size_t site) {
     return Expression(
         Term::one_body(Operator::Spin::Up, site, Operator::Spin::Down, site));
   }
 
-  static Expression spin_minus(uint8_t site) {
+  static Expression spin_minus(size_t site) {
     return Expression(
         Term::one_body(Operator::Spin::Down, site, Operator::Spin::Up, site));
   }
 
-  static Expression dot_product(uint8_t i, uint8_t j) {
+  static Expression dot_product(size_t i, size_t j) {
     Expression result;
     result += spin_x(i) * spin_x(j);
     result += spin_y(i) * spin_y(j);
