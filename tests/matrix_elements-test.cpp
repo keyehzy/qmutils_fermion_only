@@ -183,7 +183,10 @@ TEST_F(BosonicOperatorMatrixElementsTest,
   EXPECT_EQ(matrix.rows(), 3);
   EXPECT_EQ(matrix.cols(), 3);
   EXPECT_EQ(matrix(0, 0), Expression::coefficient_type(0, 0));
-  EXPECT_EQ(matrix(0, 1), Expression::coefficient_type(2.0f, 0));
+
+  EXPECT_FLOAT_EQ(matrix(0, 1).real(), 4.0f / std::sqrt(2.0f));
+  EXPECT_FLOAT_EQ(matrix(0, 1).imag(), 0);
+
   EXPECT_EQ(matrix(0, 2), Expression::coefficient_type(0, 0));
   EXPECT_EQ(matrix(1, 0), Expression::coefficient_type(0, 0));
   EXPECT_EQ(matrix(1, 1), Expression::coefficient_type(0, 0));

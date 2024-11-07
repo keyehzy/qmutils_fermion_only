@@ -236,5 +236,36 @@ TEST_F(ExpressionTest, DoubleFlipIsIdentity) {
   expr += Term({0.0f, 1.0f}, {c(Operator::Spin::Down, 2)});
   EXPECT_EQ(expr.flip_spin().flip_spin(), expr);
 }
+
+TEST_F(ExpressionTest, ExpressionIsPurely) {
+  Expression fermion_expr;
+  fermion_expr += Term(
+      {1.0f, 0.0f}, {Operator::Fermion::creation(Operator::Spin::Up, 0),
+                     Operator::Fermion::annihilation(Operator::Spin::Down, 1)});
+  fermion_expr += Term({0.0f, 1.0f},
+                       {Operator::Fermion::creation(Operator::Spin::Down, 2)});
+
+  EXPECT_TRUE(fermion_expr.is_purely(Operator::Statistics::Fermionic));
+
+  Expression boson_expr;
+  boson_expr += Term({1.0f, 0.0f},
+                     {Operator::Boson::creation(Operator::Spin::Up, 0),
+                      Operator::Boson::annihilation(Operator::Spin::Down, 1)});
+  boson_expr +=
+      Term({0.0f, 1.0f}, {Operator::Boson::creation(Operator::Spin::Down, 2)});
+
+  EXPECT_TRUE(boson_expr.is_purely(Operator::Statistics::Bosonic));
+
+  Expression mixed_expr;
+  mixed_expr += Term({1.0f, 0.0f},
+                     {Operator::Fermion::creation(Operator::Spin::Up, 0),
+                      Operator::Boson::annihilation(Operator::Spin::Down, 1)});
+  mixed_expr += Term({0.0f, 1.0f},
+                     {Operator::Fermion::creation(Operator::Spin::Down, 2)});
+
+  EXPECT_FALSE(mixed_expr.is_purely(Operator::Statistics::Fermionic));
+  EXPECT_FALSE(mixed_expr.is_purely(Operator::Statistics::Bosonic));
+}
+
 }  // namespace
 }  // namespace qmutils

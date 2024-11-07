@@ -159,5 +159,23 @@ TEST_F(TermTest, TermFlipSpin) {
   EXPECT_EQ(flipped[0], Operator::creation(Operator::Spin::Down, 0));
   EXPECT_EQ(flipped[1], Operator::annihilation(Operator::Spin::Up, 1));
 }
+
+TEST_F(TermTest, TermIsPurely) {
+  Term fermion_term({1.0f, 0.0f},
+                    {Operator::Fermion::creation(Operator::Spin::Up, 0),
+                     Operator::Fermion::annihilation(Operator::Spin::Down, 1)});
+  Term boson_term({1.0f, 0.0f},
+                  {Operator::Boson::creation(Operator::Spin::Up, 0),
+                   Operator::Boson::annihilation(Operator::Spin::Down, 1)});
+
+  EXPECT_TRUE(fermion_term.is_purely(Operator::Statistics::Fermionic));
+  EXPECT_TRUE(boson_term.is_purely(Operator::Statistics::Bosonic));
+
+  Term mixed_term({1.0f, 0.0f},
+                  {Operator::Fermion::creation(Operator::Spin::Up, 0),
+                   Operator::Boson::annihilation(Operator::Spin::Down, 1)});
+  EXPECT_FALSE(mixed_term.is_purely(Operator::Statistics::Fermionic));
+  EXPECT_FALSE(mixed_term.is_purely(Operator::Statistics::Bosonic));
+}
 }  // namespace
 }  // namespace qmutils

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <algorithm>
 #include <complex>
 #include <cstdint>
 #include <string>
@@ -89,9 +90,44 @@ class Term {
                        Operator::Spin spin2, size_t orbital2);
   static Term density(Operator::Spin spin, size_t orbital);
 
+  struct Fermion;
+  struct Boson;
+
+  bool is_purely(const Operator::Statistics& s) const {
+    return std::all_of(
+        m_operators.begin(), m_operators.end(),
+        [&](const Operator& op) { return op.statistics() == s; });
+  }
+
  private:
   coefficient_type m_coefficient;
   container_type m_operators;
+};
+
+struct Term::Fermion {
+  static Term one_body(Operator::Spin spin1, size_t orbital1,
+                       Operator::Spin spin2, size_t orbital2) {
+    return Term({Operator::Fermion::creation(spin1, orbital1),
+                 Operator::Fermion::annihilation(spin2, orbital2)});
+  }
+
+  static Term density(Operator::Spin spin, size_t orbital) {
+    return Term({Operator::Fermion::creation(spin, orbital),
+                 Operator::Fermion::annihilation(spin, orbital)});
+  }
+};
+
+struct Term::Boson {
+  static Term one_body(Operator::Spin spin1, size_t orbital1,
+                       Operator::Spin spin2, size_t orbital2) {
+    return Term({Operator::Boson::creation(spin1, orbital1),
+                 Operator::Boson::annihilation(spin2, orbital2)});
+  }
+
+  static Term density(Operator::Spin spin, size_t orbital) {
+    return Term({Operator::Boson::creation(spin, orbital),
+                 Operator::Boson::annihilation(spin, orbital)});
+  }
 };
 
 inline Term operator*(Term term, const Term& other) {

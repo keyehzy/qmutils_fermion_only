@@ -24,7 +24,7 @@ MatrixType compute_matrix_elements_serial(const Basis& basis,
 
     for (const auto& term : product.terms()) {
       size_t i = static_cast<size_t>(basis.index_of(term.first));
-      matrix_elements(i, j) = term.second;
+      matrix_elements(i, j) = term.second / basis.at(i).coefficient();
     }
   }
 
@@ -53,7 +53,7 @@ MatrixType compute_matrix_elements(const Basis& basis, const Expression& A) {
 
       for (const auto& term : product.terms()) {
         size_t i = static_cast<size_t>(basis.index_of(term.first));
-        local_updates.emplace_back(i, term.second);
+        local_updates.emplace_back(i, term.second / basis.at(i).coefficient());
       }
 
 #pragma omp critical

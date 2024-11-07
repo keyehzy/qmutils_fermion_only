@@ -1,5 +1,6 @@
 #pragma once
 
+#include <array>
 #include <sstream>
 
 #include "qmutils/operator.h"
