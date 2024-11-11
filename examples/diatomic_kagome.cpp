@@ -18,8 +18,8 @@ class DiatomicKagome {
  public:
   using Index = StaticIndex<Lx, Ly, 6>;
 
-  DiatomicKagome(float t1, float t2, float t3)
-      : m_t1(t1), m_t2(t2), m_t3(t3), m_index() {
+  DiatomicKagome(float t1, float t2, float t3, float V1, float V2, float V3)
+      : m_t1(t1), m_t2(t2), m_t3(t3), m_V1(V1), m_V2(V2), m_V3(V3), m_index() {
     construct_hamiltonian();
   }
 
@@ -30,64 +30,123 @@ class DiatomicKagome {
   float m_t1;
   float m_t2;
   float m_t3;
+  float m_V1;
+  float m_V2;
+  float m_V3;
   Index m_index;
   Expression m_hamiltonian;
 
   void construct_hamiltonian() {
+    Operator::Spin s = Operator::Spin::Up;
     auto intra_hopping = [&](size_t i, size_t j, size_t k1, size_t k2) {
       return Expression::Fermion::hopping(m_index.to_orbital(i, j, k1),
-                                          m_index.to_orbital(i, j, k2),
-                                          Operator::Spin::Up);
+                                          m_index.to_orbital(i, j, k2), s);
     };
 
     auto inter_hopping_x = [&](size_t i, size_t j, size_t k1, size_t k2) {
       return Expression::Fermion::hopping(
           m_index.to_orbital(i, j, k1), m_index.to_orbital((i + 1) % Lx, j, k2),
-          Operator::Spin::Up);
+          s);
     };
 
     auto inter_hopping_y = [&](size_t i, size_t j, size_t k1, size_t k2) {
       return Expression::Fermion::hopping(
           m_index.to_orbital(i, j, k1), m_index.to_orbital(i, (j + 1) % Ly, k2),
-          Operator::Spin::Up);
+          s);
+    };
+
+    auto intra_interaction = [&](size_t i, size_t j, size_t k1, size_t k2) {
+      return Term::Fermion::density(s, m_index.to_orbital(i, j, k1)) *
+             Term::Fermion::density(s, m_index.to_orbital(i, j, k2));
+    };
+
+    auto inter_interaction_x = [&](size_t i, size_t j, size_t k1, size_t k2) {
+      return Term::Fermion::density(s, m_index.to_orbital(i, j, k1)) *
+             Term::Fermion::density(s, m_index.to_orbital((i + 1) % Lx, j, k2));
+    };
+
+    auto inter_interaction_y = [&](size_t i, size_t j, size_t k1, size_t k2) {
+      return Term::Fermion::density(s, m_index.to_orbital(i, j, k1)) *
+             Term::Fermion::density(s, m_index.to_orbital(i, (j + 1) % Ly, k2));
     };
 
     for (size_t i = 0; i < Lx; ++i) {
       for (size_t j = 0; j < Ly; ++j) {
-        // Intra-cell hopping
-        // m_t1 hopping
-        m_hamiltonian += m_t1 * intra_hopping(i, j, 2, 3);
+        // Hopping
+        {
+          // Intra-cell
+          // m_t1
+          m_hamiltonian += m_t1 * intra_hopping(i, j, 2, 3);
 
-        // m_t2 hopping
-        m_hamiltonian += m_t2 * intra_hopping(i, j, 0, 1);
-        m_hamiltonian += m_t2 * intra_hopping(i, j, 0, 2);
-        m_hamiltonian += m_t2 * intra_hopping(i, j, 1, 2);
+          // m_t2
+          m_hamiltonian += m_t2 * intra_hopping(i, j, 0, 1);
+          m_hamiltonian += m_t2 * intra_hopping(i, j, 0, 2);
+          m_hamiltonian += m_t2 * intra_hopping(i, j, 1, 2);
 
-        m_hamiltonian += m_t2 * intra_hopping(i, j, 3, 4);
-        m_hamiltonian += m_t2 * intra_hopping(i, j, 3, 5);
-        m_hamiltonian += m_t2 * intra_hopping(i, j, 4, 5);
+          m_hamiltonian += m_t2 * intra_hopping(i, j, 3, 4);
+          m_hamiltonian += m_t2 * intra_hopping(i, j, 3, 5);
+          m_hamiltonian += m_t2 * intra_hopping(i, j, 4, 5);
 
-        // m_t3 hopping
-        m_hamiltonian += m_t3 * intra_hopping(i, j, 2, 4);
-        m_hamiltonian += m_t3 * intra_hopping(i, j, 2, 5);
+          // m_t3
+          m_hamiltonian += m_t3 * intra_hopping(i, j, 2, 4);
+          m_hamiltonian += m_t3 * intra_hopping(i, j, 2, 5);
 
-        m_hamiltonian += m_t3 * intra_hopping(i, j, 3, 0);
-        m_hamiltonian += m_t3 * intra_hopping(i, j, 3, 1);
+          m_hamiltonian += m_t3 * intra_hopping(i, j, 3, 0);
+          m_hamiltonian += m_t3 * intra_hopping(i, j, 3, 1);
 
-        // Inter-cell hopping
-        // m_t1 hopping
-        m_hamiltonian += m_t1 * inter_hopping_y(i, j, 0, 5);
-        m_hamiltonian += m_t1 * inter_hopping_x(i, j, 4, 1);
+          // Inter-cell
+          // m_t1
+          m_hamiltonian += m_t1 * inter_hopping_y(i, j, 0, 5);
+          m_hamiltonian += m_t1 * inter_hopping_x(i, j, 4, 1);
 
-        // m_t2 hopping
-        // Nothing
+          // m_t2
+          // Nothing
 
-        // m_t3 hopping
-        m_hamiltonian += m_t3 * inter_hopping_y(i, j, 0, 3);
-        m_hamiltonian += m_t3 * inter_hopping_y(i, j, 0, 4);
+          // m_t3
+          m_hamiltonian += m_t3 * inter_hopping_y(i, j, 0, 3);
+          m_hamiltonian += m_t3 * inter_hopping_y(i, j, 0, 4);
 
-        m_hamiltonian += m_t3 * inter_hopping_x(i, j, 4, 0);
-        m_hamiltonian += m_t3 * inter_hopping_x(i, j, 4, 2);
+          m_hamiltonian += m_t3 * inter_hopping_x(i, j, 4, 0);
+          m_hamiltonian += m_t3 * inter_hopping_x(i, j, 4, 2);
+        }
+
+        // Interaction
+        {
+          // Intra-cell
+          // m_V1
+          m_hamiltonian += m_V1 * intra_interaction(i, j, 2, 3);
+
+          // m_V2
+          m_hamiltonian += m_V2 * intra_interaction(i, j, 0, 1);
+          m_hamiltonian += m_V2 * intra_interaction(i, j, 0, 2);
+          m_hamiltonian += m_V2 * intra_interaction(i, j, 1, 2);
+
+          m_hamiltonian += m_V2 * intra_interaction(i, j, 3, 4);
+          m_hamiltonian += m_V2 * intra_interaction(i, j, 3, 5);
+          m_hamiltonian += m_V2 * intra_interaction(i, j, 4, 5);
+
+          // m_V3
+          m_hamiltonian += m_V3 * intra_interaction(i, j, 2, 4);
+          m_hamiltonian += m_V3 * intra_interaction(i, j, 2, 5);
+
+          m_hamiltonian += m_V3 * intra_interaction(i, j, 3, 0);
+          m_hamiltonian += m_V3 * intra_interaction(i, j, 3, 1);
+
+          // Inter-cell
+          // m_V1
+          m_hamiltonian += m_V1 * inter_interaction_y(i, j, 0, 5);
+          m_hamiltonian += m_V1 * inter_interaction_x(i, j, 4, 1);
+
+          // m_V2
+          // Nothing
+
+          // m_V3
+          m_hamiltonian += m_V3 * inter_interaction_y(i, j, 0, 3);
+          m_hamiltonian += m_V3 * inter_interaction_y(i, j, 0, 4);
+
+          m_hamiltonian += m_V3 * inter_interaction_x(i, j, 4, 0);
+          m_hamiltonian += m_V3 * inter_interaction_x(i, j, 4, 2);
+        }
       }
     }
   }
@@ -249,21 +308,39 @@ Expression inverse_transform_to_band_basis(
   return result;
 }
 
+template <typename Index>
+void print_expression(const Expression& expr, const Index& index) {
+  std::vector<Term> terms;
+  for (const auto& [ops, coeff] : expr.terms()) {
+    terms.push_back(Term(coeff, ops));
+  }
+  std::sort(terms.begin(), terms.end(), [](const Term& a, const Term& b) {
+    if (a.operators().size() != b.operators().size()) {
+      return a.operators().size() < b.operators().size();
+    }
+    return std::abs(a.coefficient()) > std::abs(b.coefficient());
+  });
+  for (const auto& term : terms) {
+    std::cout << term_to_string(term, index) << "\n";
+  }
+  return;
+}
+
 int main() {
   const size_t Lx = 2;
   const size_t Ly = 2;
   const float t1 = 0.535f;
   const float t2 = 0.0258f;
   const float t3 = 0.0261f;
+  const float V1 = 0.156f;
+  const float V2 = 0.156f;
+  const float V3 = 0.0780f;
 
-  DiatomicKagome<Lx, Ly> model(t1, t2, t3);
+  DiatomicKagome<Lx, Ly> model(t1, t2, t3, V1, V2, V3);
 
   std::cout << "Diatomic Kagome Hamiltonian in real space:" << "\n";
 
-  for (const auto& [ops, coeff] : model.hamiltonian().terms()) {
-    std::cout << "  " << term_to_string(Term(coeff, ops), model.index())
-              << "\n";
-  }
+  print_expression(model.hamiltonian(), model.index());
   std::cout << "\n";
 
   std::cout << "Diatomic Kagome Hamiltonian in k-space:" << "\n";
@@ -272,10 +349,7 @@ int main() {
       fourier_transform_operator_2d<Lx, Ly>, model.hamiltonian(), model.index(),
       FourierTransformDirection::Forward);
 
-  for (const auto& [ops, coeff] : momentum_hamiltonian.terms()) {
-    std::cout << "  " << term_to_string(Term(coeff, ops), model.index())
-              << "\n";
-  }
+  print_expression(momentum_hamiltonian, model.index());
   std::cout << "\n";
 
   std::cout << "Diatomic Kagome Hamiltonian in diagonal form:" << "\n";
@@ -284,36 +358,39 @@ int main() {
   BandStructure band_structure = diagonalize_multi_band_model<Lx, Ly>(
       momentum_hamiltonian, model.index(), num_bands);
 
-  std::ofstream out_file("band_structure.dat");
-  for (size_t i = 0; i < band_structure.k_points.size(); ++i) {
-    out_file << band_structure.k_points[i][0] << " "
-             << band_structure.k_points[i][1];
-    for (size_t j = 0; j < num_bands; ++j) {
-      out_file << " " << band_structure.eigenvalues[i][j];
-    }
-    out_file << "\n";
-  }
+  //   std::ofstream out_file("band_structure.dat");
+  //   for (size_t i = 0; i < band_structure.k_points.size(); ++i) {
+  //     out_file << band_structure.k_points[i][0] << " "
+  //              << band_structure.k_points[i][1];
+  //     for (size_t j = 0; j < num_bands; ++j) {
+  //       out_file << " " << band_structure.eigenvalues[i][j];
+  //     }
+  //     out_file << "\n";
+  //   }
 
   Expression transformed_op = transform_expression(
       transform_to_band_basis<Lx, Ly>, momentum_hamiltonian, band_structure,
       model.index(), num_bands);
 
-  for (const auto& [ops, coeff] : transformed_op.terms()) {
-    std::cout << "  " << term_to_string(Term(coeff, ops), model.index())
-              << "\n";
-  }
+  print_expression(transformed_op, model.index());
   std::cout << "\n";
 
-  std::cout << "Inverse transformation:" << "\n";
+  std::cout << "Inverse band transformation:" << "\n";
 
-  Expression inverse_transformed_op = transform_expression(
+  Expression inverse_band_transformed_op = transform_expression(
       inverse_transform_to_band_basis<Lx, Ly>, transformed_op, band_structure,
       model.index(), num_bands);
 
-  for (const auto& [ops, coeff] : inverse_transformed_op.terms()) {
-    std::cout << "  " << term_to_string(Term(coeff, ops), model.index())
-              << "\n";
-  }
+  print_expression(inverse_band_transformed_op, model.index());
+  std::cout << "\n";
+
+  std::cout << "Inverse Fourier transformation:" << "\n";
+
+  Expression inverse_momentum_hamiltonian = transform_expression(
+      fourier_transform_operator_2d<Lx, Ly>, inverse_band_transformed_op,
+      model.index(), FourierTransformDirection::Inverse);
+
+  print_expression(inverse_momentum_hamiltonian, model.index());
   std::cout << "\n";
 
   return 0;
