@@ -48,6 +48,7 @@ file(GLOB EXAMPLE_FILES
   heisenberg_1d.cpp
   creutz_ladder.cpp
   diatomic_kagome.cpp
+  square_lattice_landau_level.cpp
 )
 
 foreach(EXAMPLE_FILE ${EXAMPLE_FILES})
