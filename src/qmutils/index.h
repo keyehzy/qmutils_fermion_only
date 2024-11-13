@@ -95,6 +95,13 @@ class StaticIndex {
     return coordinates;
   }
 
+  [[nodiscard]] constexpr size_t value_at(size_t orbital, size_t i) const {
+    if (i >= Dimensions) {
+      throw std::out_of_range("Dimension index out of bounds");
+    }
+    return from_orbital(orbital)[i];
+  }
+
   constexpr const std::array<size_t, Dimensions>& dimensions() const {
     return m_dimensions;
   }
@@ -162,6 +169,13 @@ class DynamicIndex {
       orbital /= m_dimensions[i];
     }
     return coordinates;
+  }
+
+  [[nodiscard]] size_t value_at(size_t orbital, size_t i) const {
+    if (i >= m_dimensions.size()) {
+      throw std::out_of_range("Dimension is out of bounds");
+    }
+    return from_orbital(orbital)[i];
   }
 
   const std::vector<size_t>& dimensions() const { return m_dimensions; }
