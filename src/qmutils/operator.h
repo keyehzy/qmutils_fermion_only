@@ -93,12 +93,12 @@ class Operator {
   [[nodiscard]] std::string to_string() const;
 
   [[nodiscard]] static constexpr Operator creation(Spin spin,
-                                                   int_type orbital) noexcept {
+                                                   size_t orbital) noexcept {
     return Operator(Type::Creation, spin, orbital);
   }
 
   [[nodiscard]] static constexpr Operator annihilation(
-      Spin spin, int_type orbital) noexcept {
+      Spin spin, size_t orbital) noexcept {
     return Operator(Type::Annihilation, spin, orbital);
   }
 
@@ -133,21 +133,21 @@ static_assert(std::is_trivially_copyable_v<Operator>,
 static_assert(sizeof(Operator) == 2, "Operator must be 2 byte in size");
 
 struct Operator::Fermion {
-  static constexpr Operator creation(Spin spin, int_type orbital) noexcept {
+  static constexpr Operator creation(Spin spin, size_t orbital) noexcept {
     return Operator(Type::Creation, spin, orbital, Statistics::Fermionic);
   }
 
-  static constexpr Operator annihilation(Spin spin, int_type orbital) noexcept {
+  static constexpr Operator annihilation(Spin spin, size_t orbital) noexcept {
     return Operator(Type::Annihilation, spin, orbital, Statistics::Fermionic);
   }
 };
 
 struct Operator::Boson {
-  static constexpr Operator creation(Spin spin, int_type orbital) noexcept {
+  static constexpr Operator creation(Spin spin, size_t orbital) noexcept {
     return Operator(Type::Creation, spin, orbital, Statistics::Bosonic);
   }
 
-  static constexpr Operator annihilation(Spin spin, int_type orbital) noexcept {
+  static constexpr Operator annihilation(Spin spin, size_t orbital) noexcept {
     return Operator(Type::Annihilation, spin, orbital, Statistics::Bosonic);
   }
 };
