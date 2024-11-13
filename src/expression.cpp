@@ -71,4 +71,14 @@ Expression Expression::hopping(size_t from_orbital, size_t to_orbital,
   return result;
 }
 
+Expression Expression::hopping(coefficient_type coeff, size_t from_orbital,
+                               size_t to_orbital, Operator::Spin spin) {
+  QMUTILS_ASSERT(from_orbital != to_orbital);
+  Expression result;
+  result += coeff * Term::one_body(spin, from_orbital, spin, to_orbital);
+  result +=
+      std::conj(coeff) * Term::one_body(spin, to_orbital, spin, from_orbital);
+  return result;
+}
+
 }  // namespace qmutils
