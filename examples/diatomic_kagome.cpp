@@ -202,7 +202,9 @@ static Expression fourier_transform_operator_2d(
     for (size_t ky = 0; ky < Ly; ++ky) {
       //   Vec2 R_ijs = {i * a1.x + j * a2.x + positions[site].x,
       //                 i * a1.y + j * a2.y + positions[site].y};
-      std::complex<float> exponent(0.0f, factor_x * kx * i + factor_y * ky * j);
+      std::complex<float> exponent(
+          0.0f, factor_x * static_cast<float>(kx) * static_cast<float>(i) +
+                    factor_y * static_cast<float>(ky) * static_cast<float>(j));
       std::complex<float> coefficient =
           std::exp(static_cast<float>(direction) * exponent) * normalization;
 

@@ -31,11 +31,11 @@ class CreutzLadderModel {
     auto s = Operator::Spin::Up;
 
     for (size_t i = 0; i < L; ++i) {
-      uint8_t A_site = m_index.to_orbital(i, 0);
-      uint8_t B_site = m_index.to_orbital(i, 1);
+      size_t A_site = m_index.to_orbital(i, 0);
+      size_t B_site = m_index.to_orbital(i, 1);
 
-      uint8_t next_A_site = m_index.to_orbital((i + 1) % L, 0);
-      uint8_t next_B_site = m_index.to_orbital((i + 1) % L, 1);
+      size_t next_A_site = m_index.to_orbital((i + 1) % L, 0);
+      size_t next_B_site = m_index.to_orbital((i + 1) % L, 1);
 
       m_hamiltonian += m_J * Expression::Boson::hopping(A_site, next_B_site, s);
       m_hamiltonian += m_J * Expression::Boson::hopping(B_site, next_A_site, s);
@@ -53,8 +53,8 @@ class CreutzLadderModel {
     }
 
     for (size_t i = 0; i < L; ++i) {
-      uint8_t A_site = m_index.to_orbital(i, 0);
-      uint8_t B_site = m_index.to_orbital(i, 1);
+      size_t A_site = m_index.to_orbital(i, 0);
+      size_t B_site = m_index.to_orbital(i, 1);
 
       m_hamiltonian += 0.5f * m_U *
                        Term({Operator::Boson::creation(s, A_site),
@@ -89,7 +89,7 @@ static std::vector<std::pair<float, float>> calculate_dos(
 
 #pragma omp parallel for
   for (size_t i = 0; i < num_points; ++i) {
-    float E = E_min + i * dE;
+    float E = E_min + static_cast<float>(i) * dE;
     float rho = 0.0f;
 
     for (size_t j = 0; j < eigenvalues.n_elem; ++j) {
