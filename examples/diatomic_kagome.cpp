@@ -420,8 +420,8 @@ void print_expression(const Expression& expr, const Index& index) {
   return;
 }
 
-bool analyze_whether_is_density_density(const Term& term) {
-  std::unordered_map<Operator, size_t> op_infos;
+static bool analyze_whether_is_density_density(const Term& term) {
+  std::unordered_map<Operator, int> op_infos;
   for (const auto& op : term.operators()) {
     Operator info(Operator::Type::Creation, op.spin(), op.orbital(),
                   op.statistics());
