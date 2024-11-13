@@ -41,4 +41,57 @@ auto transform_expression(F&& f, const Expression& expr, Args&&... args)
   return result;
 }
 
+template <typename F, typename... Args>
+using is_operator_predicate =
+    std::is_invocable_r<bool, F, const Operator&, Args...>;
+
+template <typename F, typename... Args>
+auto check_operator_predicate(F&& f, const Operator& op, Args&&... args)
+    -> std::enable_if_t<is_operator_predicate<F, Args...>::value, bool> {
+  return f(op, std::forward<Args>(args)...);
+}
+
+template <typename F, typename... Args>
+auto check_term_predicate(F&& f, const Term& term, Args&&... args)
+    -> std::enable_if_t<is_operator_predicate<F, Args...>::value, bool> {
+  return std::all_of(term.operators().begin(), term.operators().end(),
+                     [&](const Operator& op) {
+                       return check_operator_predicate(
+                           std::forward<F>(f), op, std::forward<Args>(args)...);
+                     });
+}
+
+template <typename F, typename... Args>
+auto check_expression_predicate(F&& f, const Expression& expr, Args&&... args)
+    -> std::enable_if_t<is_operator_predicate<F, Args...>::value, bool> {
+  return std::all_of(
+      expr.terms().begin(), expr.terms().end(), [&](const auto& term_pair) {
+        return check_term_predicate(std::forward<F>(f),
+                                    Term(term_pair.second, term_pair.first),
+                                    std::forward<Args>(args)...);
+      });
+}
+
+template <typename F, typename... Args>
+using is_term_predicate =
+    std::is_invocable_r<bool, F, const Term::container_type&, Args...>;
+
+template <typename F, typename... Args>
+auto check_term_collective_predicate(F&& f, const Term& term, Args&&... args)
+    -> std::enable_if_t<is_term_predicate<F, Args...>::value, bool> {
+  return f(term.operators(), std::forward<Args>(args)...);
+}
+
+template <typename F, typename... Args>
+auto check_expression_collective_predicate(F&& f, const Expression& expr,
+                                           Args&&... args)
+    -> std::enable_if_t<is_term_predicate<F, Args...>::value, bool> {
+  return std::all_of(
+      expr.terms().begin(), expr.terms().end(), [&](const auto& term_pair) {
+        return check_term_collective_predicate(
+            std::forward<F>(f), Term(term_pair.second, term_pair.first),
+            std::forward<Args>(args)...);
+      });
+}
+
 }  // namespace qmutils
