@@ -1,5 +1,6 @@
 #include <armadillo>
 #include <fstream>
+#include <map>
 #include <vector>
 
 #include "qmutils/assert.h"
@@ -10,6 +11,7 @@
 #include "qmutils/index.h"
 #include "qmutils/matrix_elements.h"
 #include "qmutils/operator.h"
+#include "qmutils/term.h"
 
 using namespace qmutils;
 
@@ -309,6 +311,98 @@ Expression inverse_transform_to_band_basis(
 }
 
 template <typename Index>
+Expression remove_inter_band_terms(const Expression& expr, const Index& index,
+                                   size_t k_filled_bands) {
+  Expression result;
+
+  for (const auto& [operators, coefficient] : expr.terms()) {
+    bool keep_term = true;
+
+    if (operators.size() <= 2) {
+      result += Term(coefficient, operators);
+      continue;
+    }
+    for (const auto& op : operators) {
+      size_t alpha = index.value_at(op.orbital(), 2);
+
+      if (alpha < k_filled_bands) {
+        if (op.type() == Operator::Type::Annihilation) {
+          for (const auto& op2 : operators) {
+            size_t beta = index.value_at(op2.orbital(), 2);
+            if (op2.type() == Operator::Type::Creation &&
+                beta >= k_filled_bands) {
+              std::cout << term_to_string(Term(coefficient, operators), index)
+                        << "\n";
+              keep_term = false;
+              break;
+            }
+          }
+          if (!keep_term) break;
+        }
+
+        if (op.type() == Operator::Type::Creation) {
+          for (const auto& op2 : operators) {
+            size_t beta = index.value_at(op2.orbital(), 2);
+            if (op2.type() == Operator::Type::Annihilation &&
+                beta >= k_filled_bands) {
+              std::cout << term_to_string(Term(coefficient, operators), index)
+                        << "\n";
+
+              keep_term = false;
+              break;
+            }
+          }
+          if (!keep_term) break;
+        }
+      }
+    }
+
+    if (keep_term) {
+      result += Term(coefficient, operators);
+    }
+  }
+  return result;
+}
+
+static bool check_spin_conservation(const Term::container_type& ops) {
+  int spin_up_count = 0;
+  int spin_down_count = 0;
+
+  for (const auto& op : ops) {
+    if (op.spin() == Operator::Spin::Up) {
+      spin_up_count += (op.type() == Operator::Type::Creation) ? 1 : -1;
+    } else {
+      spin_down_count += (op.type() == Operator::Type::Creation) ? 1 : -1;
+    }
+  }
+
+  return spin_up_count == 0 && spin_down_count == 0;
+}
+
+static bool check_particle_conservation(const Term::container_type& ops) {
+  int creation_count = 0;
+  for (const auto& op : ops) {
+    creation_count += (op.type() == Operator::Type::Creation) ? 1 : -1;
+  }
+  return creation_count == 0;
+}
+
+template <typename Index>
+static bool check_momentum_conservation(const Term::container_type& ops,
+                                        const Index& index) {
+  size_t total_kx = 0;
+  size_t total_ky = 0;
+  size_t Lx = index.dimension(0);
+  size_t Ly = index.dimension(1);
+  for (const auto& op : ops) {
+    auto [kx, ky, _] = index.from_orbital(op.orbital());
+    total_kx += (op.type() == Operator::Type::Creation) ? kx : -kx;
+    total_ky += (op.type() == Operator::Type::Creation) ? ky : -ky;
+  }
+  return total_kx % Lx == 0 && total_ky % Ly == 0;
+}
+
+template <typename Index>
 void print_expression(const Expression& expr, const Index& index) {
   std::vector<Term> terms;
   for (const auto& [ops, coeff] : expr.terms()) {
@@ -326,6 +420,17 @@ void print_expression(const Expression& expr, const Index& index) {
   return;
 }
 
+bool analyze_whether_is_density_density(const Term& term) {
+  std::unordered_map<Operator, size_t> op_infos;
+  for (const auto& op : term.operators()) {
+    Operator info(Operator::Type::Creation, op.spin(), op.orbital(),
+                  op.statistics());
+    op_infos[info] += (op.type() == Operator::Type::Creation) ? 1 : -1;
+  }
+  return std::all_of(op_infos.begin(), op_infos.end(),
+                     [](const auto& pair) { return pair.second == 0; });
+}
+
 int main() {
   const size_t Lx = 2;
   const size_t Ly = 2;
@@ -338,8 +443,12 @@ int main() {
 
   DiatomicKagome<Lx, Ly> model(t1, t2, t3, V1, V2, V3);
 
-  std::cout << "Diatomic Kagome Hamiltonian in real space:" << "\n";
+  QMUTILS_ASSERT(check_expression_collective_predicate(check_spin_conservation,
+                                                       model.hamiltonian()));
+  QMUTILS_ASSERT(check_expression_collective_predicate(
+      check_particle_conservation, model.hamiltonian()));
 
+  std::cout << "Diatomic Kagome Hamiltonian in real space:" << "\n";
   print_expression(model.hamiltonian(), model.index());
   std::cout << "\n";
 
@@ -348,11 +457,13 @@ int main() {
   Expression momentum_hamiltonian = transform_expression(
       fourier_transform_operator_2d<Lx, Ly>, model.hamiltonian(), model.index(),
       FourierTransformDirection::Forward);
-
+  QMUTILS_ASSERT(check_expression_collective_predicate(
+      check_momentum_conservation<typename DiatomicKagome<Lx, Ly>::Index>,
+      momentum_hamiltonian, model.index()));
   print_expression(momentum_hamiltonian, model.index());
   std::cout << "\n";
 
-  std::cout << "Diatomic Kagome Hamiltonian in diagonal form:" << "\n";
+  std::cout << "Diagonalizing:" << "\n";
 
   const size_t num_bands = 6;
   BandStructure band_structure = diagonalize_multi_band_model<Lx, Ly>(
@@ -368,29 +479,41 @@ int main() {
   //     out_file << "\n";
   //   }
 
+  std::cout << "Diatomic Kagome Hamiltonian in diagonal form:" << "\n";
   Expression transformed_op = transform_expression(
       transform_to_band_basis<Lx, Ly>, momentum_hamiltonian, band_structure,
       model.index(), num_bands);
-
   print_expression(transformed_op, model.index());
   std::cout << "\n";
 
+  std::cout << "Removing inter-band terms:" << "\n";
+  Expression projected_op =
+      remove_inter_band_terms(transformed_op, model.index(), num_bands / 2);
+  std::cout << "\n";
+
   std::cout << "Inverse band transformation:" << "\n";
-
   Expression inverse_band_transformed_op = transform_expression(
-      inverse_transform_to_band_basis<Lx, Ly>, transformed_op, band_structure,
+      inverse_transform_to_band_basis<Lx, Ly>, projected_op, band_structure,
       model.index(), num_bands);
-
   print_expression(inverse_band_transformed_op, model.index());
   std::cout << "\n";
 
   std::cout << "Inverse Fourier transformation:" << "\n";
-
   Expression inverse_momentum_hamiltonian = transform_expression(
       fourier_transform_operator_2d<Lx, Ly>, inverse_band_transformed_op,
       model.index(), FourierTransformDirection::Inverse);
-
   print_expression(inverse_momentum_hamiltonian, model.index());
+  std::cout << "\n";
+
+  for (const auto& [ops, coeff] : inverse_momentum_hamiltonian.terms()) {
+    if (analyze_whether_is_density_density(Term(coeff, ops))) {
+      std::cout << "Density-density term found: "
+                << term_to_string(Term(coeff, ops), model.index()) << "\n";
+    } else {
+      std::cout << "Non-density-density term found: "
+                << term_to_string(Term(coeff, ops), model.index()) << "\n";
+    }
+  }
   std::cout << "\n";
 
   return 0;
