@@ -73,12 +73,61 @@ static bool check_particle_conservation(const Term::container_type& ops) {
   return creation_count == 0;
 }
 
-int main() {
-  const size_t Lx = 4;
-  const size_t Ly = 4;
-  const size_t particles = 1;
+static std::vector<std::pair<float, float>> calculate_dos(
+    const arma::fvec& eigenvalues, float sigma = 0.1f, size_t num_points = 1000,
+    float padding_factor = 0.1f) {
+  float E_min = eigenvalues.min();
+  float E_max = eigenvalues.max();
+  float padding = (E_max - E_min) * padding_factor;
+  E_min -= padding;
+  E_max += padding;
 
-  SquareLatticeLandauLevel<Lx, Ly> model(1.0f, 0.0f);
+  float dE = (E_max - E_min) / static_cast<float>(num_points - 1);
+  std::vector<std::pair<float, float>> dos(num_points);
+
+  // Calculate DOS using Gaussian broadening
+  const float normalization =
+      1.0f / (sigma * std::sqrt(2.0f * std::numbers::pi_v<float>));
+
+#pragma omp parallel for
+  for (size_t i = 0; i < num_points; ++i) {
+    float E = E_min + static_cast<float>(i) * dE;
+    float rho = 0.0f;
+
+    for (size_t j = 0; j < eigenvalues.n_elem; ++j) {
+      float delta_E = (E - eigenvalues(j)) / sigma;
+      rho += std::exp(-0.5f * delta_E * delta_E);
+    }
+
+    dos[i] = {E, rho * normalization};
+  }
+
+  return dos;
+}
+
+static std::vector<std::pair<float, float>> calculate_integrated_dos(
+    const std::vector<std::pair<float, float>>& dos) {
+  std::vector<std::pair<float, float>> integrated_dos(dos.size());
+  float integral = 0.0f;
+  float dE = dos[1].first - dos[0].first;
+
+  for (size_t i = 0; i < dos.size(); ++i) {
+    integral += dos[i].second * dE;
+    integrated_dos[i] = {dos[i].first, integral};
+  }
+
+  return integrated_dos;
+}
+
+int main() {
+  const size_t Lx = 5;
+  const size_t Ly = 5;
+  const size_t particles = 2;
+
+  const float t = 1.0f;
+  const float phi = 1.0f;
+
+  SquareLatticeLandauLevel<Lx, Ly> model(t, phi);
 
   QMUTILS_ASSERT(check_expression_collective_predicate(check_spin_conservation,
                                                        model.hamiltonian()));
@@ -96,7 +145,20 @@ int main() {
   arma::fvec eigenvalues;
   arma::cx_fmat eigenvectors;
   arma::eig_sym(eigenvalues, eigenvectors, H_matrix);
-  std::cout << "# Eigenvalues computed" << eigenvalues << "\n";
+
+  auto dos = calculate_dos(eigenvalues);
+  auto integrated_dos = calculate_integrated_dos(dos);
+
+  std::cout << "# DOS computed" << std::endl;
+
+  std::ofstream dos_file("dos.dat");
+
+  for (size_t i = 0; i < dos.size(); ++i) {
+    dos_file << dos[i].first << " "
+             << dos[i].second / static_cast<float>(basis.size()) << " "
+             << integrated_dos[i].second / static_cast<float>(basis.size())
+             << "\n";
+  }
 
   return 0;
 }
