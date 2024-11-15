@@ -105,6 +105,14 @@ class Term {
 };
 
 struct Term::Fermion {
+  static Term creation(Operator::Spin spin, size_t orbital) {
+    return Term({Operator::Fermion::creation(spin, orbital)});
+  }
+
+  static Term annihilation(Operator::Spin spin, size_t orbital) {
+    return Term({Operator::Fermion::annihilation(spin, orbital)});
+  }
+
   static Term one_body(Operator::Spin spin1, size_t orbital1,
                        Operator::Spin spin2, size_t orbital2) {
     return Term({Operator::Fermion::creation(spin1, orbital1),
@@ -118,6 +126,12 @@ struct Term::Fermion {
 };
 
 struct Term::Boson {
+  static Term creation(Operator::Spin spin, size_t orbital) {
+    return Term({Operator::Boson::creation(spin, orbital)});
+  }
+  static Term annihilation(Operator::Spin spin, size_t orbital) {
+    return Term({Operator::Boson::annihilation(spin, orbital)});
+  }
   static Term one_body(Operator::Spin spin1, size_t orbital1,
                        Operator::Spin spin2, size_t orbital2) {
     return Term({Operator::Boson::creation(spin1, orbital1),
