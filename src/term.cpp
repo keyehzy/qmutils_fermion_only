@@ -52,4 +52,9 @@ Term Term::density(Operator::Spin spin, size_t orbital) {
   return Term::one_body(spin, orbital, spin, orbital);
 }
 
+Term density_density(Operator::Spin spin1, size_t i, Operator::Spin spin2,
+                     size_t j) {
+  return Term::density(spin1, i) * Term::density(spin2, j);
+}
+
 }  // namespace qmutils

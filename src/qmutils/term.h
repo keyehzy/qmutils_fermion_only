@@ -85,11 +85,32 @@ class Term {
 
   std::string to_string() const;
 
+  friend Term operator*(Term term, const Term& other) {
+    term *= other;
+    return term;
+  }
+
+  friend Term operator*(Term term, Operator other) {
+    term *= other;
+    return term;
+  }
+
+  friend Term operator*(Term term, const Term::coefficient_type& scalar) {
+    term *= scalar;
+    return term;
+  }
+
+  friend Term operator*(const Term::coefficient_type& scalar, Term term) {
+    return term * scalar;
+  }
+
   static Term creation(Operator::Spin spin, size_t orbital);
   static Term annihilation(Operator::Spin spin, size_t orbital);
   static Term one_body(Operator::Spin spin1, size_t orbital1,
                        Operator::Spin spin2, size_t orbital2);
   static Term density(Operator::Spin spin, size_t orbital);
+  static Term density_density(Operator::Spin spin1, size_t i,
+                              Operator::Spin spin2, size_t j);
 
   struct Fermion;
   struct Boson;
@@ -146,6 +167,11 @@ struct Term::Fermion {
     return Term({Operator::Fermion::creation(spin, orbital),
                  Operator::Fermion::annihilation(spin, orbital)});
   }
+
+  static Term density_density(Operator::Spin spin1, size_t i,
+                              Operator::Spin spin2, size_t j) {
+    return Term::Fermion::density(spin1, i) * Term::Fermion::density(spin2, j);
+  }
 };
 
 struct Term::Boson {
@@ -165,27 +191,12 @@ struct Term::Boson {
     return Term({Operator::Boson::creation(spin, orbital),
                  Operator::Boson::annihilation(spin, orbital)});
   }
+
+  static Term density_density(Operator::Spin spin1, size_t i,
+                              Operator::Spin spin2, size_t j) {
+    return Term::Boson::density(spin1, i) * Term::Boson::density(spin2, j);
+  }
 };
-
-inline Term operator*(Term term, const Term& other) {
-  term *= other;
-  return term;
-}
-
-inline Term operator*(Term term, Operator other) {
-  term *= other;
-  return term;
-}
-
-inline Term operator*(Term term, const Term::coefficient_type& scalar) {
-  term *= scalar;
-  return term;
-}
-
-inline Term operator*(const Term::coefficient_type& scalar, Term term) {
-  return term * scalar;
-}
-
 }  // namespace qmutils
 
 template <>
