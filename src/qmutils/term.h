@@ -4,6 +4,7 @@
 #include <complex>
 #include <cstdint>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 #include "qmutils/operator.h"
@@ -97,6 +98,28 @@ class Term {
     return std::all_of(
         m_operators.begin(), m_operators.end(),
         [&](const Operator& op) { return op.statistics() == s; });
+  }
+
+  bool is_diagonal() const {
+    std::unordered_map<size_t, int> counts;
+
+    for (const auto& op : m_operators) {
+      auto key = Operator(Operator::Type::Creation, op.spin(), op.orbital(),
+                          op.statistics())
+                     .data();
+      if (op.type() == Operator::Type::Creation) {
+        counts[key] += 1;
+      } else {
+        counts[key] -= 1;
+      }
+    }
+
+    if (std::any_of(counts.begin(), counts.end(),
+                    [](const auto& elm) { return elm.second != 0; })) {
+      return false;
+    }
+
+    return true;
   }
 
  private:

@@ -177,5 +177,23 @@ TEST_F(TermTest, TermIsPurely) {
   EXPECT_FALSE(mixed_term.is_purely(Operator::Statistics::Fermionic));
   EXPECT_FALSE(mixed_term.is_purely(Operator::Statistics::Bosonic));
 }
+
+TEST_F(TermTest, TermIsDiagonal) {
+  {
+    Term term1 =
+        Term::Fermion::one_body(Operator::Spin::Up, 0, Operator::Spin::Up, 1);
+    Term term2 = Term::Fermion::density(Operator::Spin::Up, 0);
+    EXPECT_FALSE(term1.is_diagonal());
+    EXPECT_TRUE(term2.is_diagonal());
+  }
+
+  {
+    Term term1 =
+        Term::Boson::one_body(Operator::Spin::Up, 0, Operator::Spin::Up, 1);
+    Term term2 = Term::Boson::density(Operator::Spin::Up, 0);
+    EXPECT_FALSE(term1.is_diagonal());
+    EXPECT_TRUE(term2.is_diagonal());
+  }
+}
 }  // namespace
 }  // namespace qmutils
