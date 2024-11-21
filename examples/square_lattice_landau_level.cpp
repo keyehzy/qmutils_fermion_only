@@ -188,15 +188,12 @@ int main() {
 
   SquareLatticeLandauLevel<Lx, Ly> model(t, phi, U);
 
-  // QMUTILS_ASSERT(check_expression_predicate(
-  //                                           check_statistics,
-  //                                           model.hamiltonian(),
-  //                                           Operator::Statistics::Bosonic));
-  // QMUTILS_ASSERT(check_expression_collective_predicate(check_spin_conservation,
-  //                                                      model.hamiltonian()));
-  // QMUTILS_ASSERT(check_expression_collective_predicate(
-  //                                                      check_particle_conservation,
-  //                                                      model.hamiltonian()));
+  QMUTILS_ASSERT(check_expression_predicate(
+      check_statistics, model.hamiltonian(), Operator::Statistics::Bosonic));
+  QMUTILS_ASSERT(check_expression_collective_predicate(check_spin_conservation,
+                                                       model.hamiltonian()));
+  QMUTILS_ASSERT(check_expression_collective_predicate(
+      check_particle_conservation, model.hamiltonian()));
 
   // demonstrate_cls(model.hamiltonian(), model.index());
 
