@@ -121,10 +121,10 @@ class Term {
         [&](const Operator& op) { return op.statistics() == s; });
   }
 
-  bool is_diagonal() const {
+  static bool is_diagonal(const Term::container_type& ops) {
     std::unordered_map<size_t, int> counts;
 
-    for (const auto& op : m_operators) {
+    for (const auto& op : ops) {
       auto key = Operator(Operator::Type::Creation, op.spin(), op.orbital(),
                           op.statistics())
                      .data();
@@ -142,6 +142,8 @@ class Term {
 
     return true;
   }
+
+  bool is_diagonal() const { return is_diagonal(m_operators); }
 
  private:
   coefficient_type m_coefficient;
