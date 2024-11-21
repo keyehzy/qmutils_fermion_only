@@ -34,6 +34,8 @@ function(add_example example_file)
     qmutils
     xxhashct
     ${ARMADILLO_LIBRARIES}
+    -DARMA_DONT_USE_WRAPPER
+    -lopenblas
   )
 
 endfunction()
@@ -49,6 +51,7 @@ file(GLOB EXAMPLE_FILES
   creutz_ladder.cpp
   diatomic_kagome.cpp
   square_lattice_landau_level.cpp
+  canonical_diag.cpp
 )
 
 foreach(EXAMPLE_FILE ${EXAMPLE_FILES})
