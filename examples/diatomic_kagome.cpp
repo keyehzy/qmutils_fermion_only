@@ -488,35 +488,61 @@ int main() {
   print_expression(transformed_op, model.index());
   std::cout << "\n";
 
-  std::cout << "Removing inter-band terms:" << "\n";
-  Expression projected_op =
-      remove_inter_band_terms(transformed_op, model.index(), num_bands / 2);
-  std::cout << "\n";
+  std::cout << "Check if transformed Hamiltonian have arbitrary band index"
+            << std::endl;
 
-  std::cout << "Inverse band transformation:" << "\n";
-  Expression inverse_band_transformed_op = transform_expression(
-      inverse_transform_to_band_basis<Lx, Ly>, projected_op, band_structure,
-      model.index(), num_bands);
-  print_expression(inverse_band_transformed_op, model.index());
-  std::cout << "\n";
+  for (const auto& [ops, coeff] : transformed_op.terms()) {
+    std::unordered_map<size_t, size_t> band_index_map;
+    Term term(coeff, ops);
 
-  std::cout << "Inverse Fourier transformation:" << "\n";
-  Expression inverse_momentum_hamiltonian = transform_expression(
-      fourier_transform_operator_2d<Lx, Ly>, inverse_band_transformed_op,
-      model.index(), FourierTransformDirection::Inverse);
-  print_expression(inverse_momentum_hamiltonian, model.index());
-  std::cout << "\n";
+    for (const auto& op : term.operators()) {
+      auto [kx, ky, band] = model.index().from_orbital(op.orbital());
+      if (op.type() == Operator::Type::Creation) {
+        band_index_map[band] += 1;
+      } else {
+        band_index_map[band] -= 1;
+      }
+    }
 
-  for (const auto& [ops, coeff] : inverse_momentum_hamiltonian.terms()) {
-    if (analyze_whether_is_density_density(Term(coeff, ops))) {
-      std::cout << "Density-density term found: "
-                << term_to_string(Term(coeff, ops), model.index()) << "\n";
+    if (std::any_of(band_index_map.begin(), band_index_map.end(),
+                    [](const auto& pair) { return pair.second != 0; })) {
+      std::cout << "Band index is arbitrary: "
+                << term_to_string(term, model.index()) << "\n";
     } else {
-      std::cout << "Non-density-density term found: "
-                << term_to_string(Term(coeff, ops), model.index()) << "\n";
+      std::cout << "Band index is not arbitrary: "
+                << term_to_string(term, model.index()) << "\n";
     }
   }
-  std::cout << "\n";
+
+  // std::cout << "Removing inter-band terms:" << "\n";
+  // Expression projected_op =
+  //     remove_inter_band_terms(transformed_op, model.index(), num_bands / 2);
+  // std::cout << "\n";
+
+  // std::cout << "Inverse band transformation:" << "\n";
+  // Expression inverse_band_transformed_op = transform_expression(
+  //     inverse_transform_to_band_basis<Lx, Ly>, projected_op, band_structure,
+  //     model.index(), num_bands);
+  // print_expression(inverse_band_transformed_op, model.index());
+  // std::cout << "\n";
+
+  // std::cout << "Inverse Fourier transformation:" << "\n";
+  // Expression inverse_momentum_hamiltonian = transform_expression(
+  //     fourier_transform_operator_2d<Lx, Ly>, inverse_band_transformed_op,
+  //     model.index(), FourierTransformDirection::Inverse);
+  // print_expression(inverse_momentum_hamiltonian, model.index());
+  // std::cout << "\n";
+
+  // for (const auto& [ops, coeff] : inverse_momentum_hamiltonian.terms()) {
+  //   if (analyze_whether_is_density_density(Term(coeff, ops))) {
+  //     std::cout << "Density-density term found: "
+  //               << term_to_string(Term(coeff, ops), model.index()) << "\n";
+  //   } else {
+  //     std::cout << "Non-density-density term found: "
+  //               << term_to_string(Term(coeff, ops), model.index()) << "\n";
+  //   }
+  // }
+  // std::cout << "\n";
 
   return 0;
 }
