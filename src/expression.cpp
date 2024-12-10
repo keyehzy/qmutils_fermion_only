@@ -13,7 +13,7 @@ void Expression::normalize() {
   // 1) Remove terms with coefficients that are effectively zero
   // 2) In the case of Fermions, remove terms with adjacent identical operators
   for (auto it = m_terms.begin(); it != m_terms.end();) {
-    if ((std::abs(it->second) <
+    if ((std::norm(it->second) <
          std::numeric_limits<coefficient_type::value_type>::epsilon()) ||
         (std::adjacent_find(it->first.begin(), it->first.end(),
                             both_are_fermions_and_equal) != it->first.end())) {
