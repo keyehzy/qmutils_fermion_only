@@ -52,6 +52,7 @@ file(GLOB EXAMPLE_FILES
   diatomic_kagome.cpp
   square_lattice_landau_level.cpp
   canonical_diag.cpp
+  sawtooth.cpp
 )
 
 foreach(EXAMPLE_FILE ${EXAMPLE_FILES})

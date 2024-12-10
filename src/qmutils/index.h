@@ -124,11 +124,10 @@ class StaticIndex {
   [[nodiscard]] std::string to_string(const Expression& expr) const {
     return expr_to_string(expr, *this);
   }
+  static constexpr size_t total_size() { return (... * Dims); }
 
  private:
   static constexpr std::array<size_t, Dimensions> m_dimensions = {Dims...};
-
-  static constexpr size_t total_size() { return (... * Dims); }
 };
 
 class DynamicIndex {

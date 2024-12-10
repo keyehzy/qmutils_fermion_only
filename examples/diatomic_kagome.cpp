@@ -366,7 +366,8 @@ Expression remove_inter_band_terms(const Expression& expr, const Index& index,
   return result;
 }
 
-static bool check_spin_conservation(const Term::container_type& ops) {
+[[maybe_unused]] static bool check_spin_conservation(
+    const Term::container_type& ops) {
   int spin_up_count = 0;
   int spin_down_count = 0;
 
@@ -381,7 +382,8 @@ static bool check_spin_conservation(const Term::container_type& ops) {
   return spin_up_count == 0 && spin_down_count == 0;
 }
 
-static bool check_particle_conservation(const Term::container_type& ops) {
+[[maybe_unused]] static bool check_particle_conservation(
+    const Term::container_type& ops) {
   int creation_count = 0;
   for (const auto& op : ops) {
     creation_count += (op.type() == Operator::Type::Creation) ? 1 : -1;
@@ -422,7 +424,8 @@ void print_expression(const Expression& expr, const Index& index) {
   return;
 }
 
-static bool analyze_whether_is_density_density(const Term& term) {
+[[maybe_unused]] static bool analyze_whether_is_density_density(
+    const Term& term) {
   std::unordered_map<Operator, int> op_infos;
   for (const auto& op : term.operators()) {
     Operator info(Operator::Type::Creation, op.spin(), op.orbital(),

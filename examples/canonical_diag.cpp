@@ -38,7 +38,8 @@ static Expression bakerCampbellHausdorff(const Expression& A,
 
   Expression result;
   for (size_t n = 0; n <= order; ++n) {
-    float coeff = powf(lambda, n) / static_cast<float>(factorial(n));
+    float coeff =
+        powf(lambda, static_cast<float>(n)) / static_cast<float>(factorial(n));
     result += terms[n] * coeff;
   }
 
@@ -76,7 +77,8 @@ static Expression bakerCampbellHausdorff(const Expression& A,
 }
 
 [[maybe_unused]] static float find_optimal_theta_quadratic(const Expression& H,
-                                                           const Term& target) {
+                                                           const Term& target,
+                                                           float tol = 1e-6f) {
   Expression R;
   R -= target;
   R += target.adjoint();
@@ -88,7 +90,7 @@ static Expression bakerCampbellHausdorff(const Expression& A,
   float beta = comm2[target.operators()].real();
   float gamma = target.coefficient().real();
 
-  if (std::abs(beta) < 1e-6f) {
+  if (std::norm(beta) < tol * tol) {
     return std::numbers::pi_v<float> / 4.0f;
   }
 
@@ -99,8 +101,6 @@ static Expression bakerCampbellHausdorff(const Expression& A,
       -alpha_beta + std::sqrt(alpha_beta * alpha_beta - 2.0f * gamma_beta);
   float r2 =
       -alpha_beta - std::sqrt(alpha_beta * alpha_beta - 2.0f * gamma_beta);
-
-  float pi4 = std::numbers::pi_v<float> / 4.0f;
 
   if (std::abs(r1) < std::abs(r2)) {
     return r1;
@@ -180,10 +180,11 @@ static Expression jacobi_diagonalization(const Expression& H, size_t nbody,
   }
   std::cout << "term: " << largest_off_diag_term.to_string() << std::endl;
 
-  // float optimal_theta = find_optimal_theta_quadratic(H,
-  // largest_off_diag_term);
-  float optimal_theta = find_optimal_theta(H, largest_off_diag_term,
-                                           -M_PI / 4.0f, M_PI / 4.0f, tol);
+  float optimal_theta = find_optimal_theta_quadratic(H, largest_off_diag_term);
+  // float pi = std::numbers::pi_v<float>;
+  // float optimal_theta =
+  //     find_optimal_theta(H, largest_off_diag_term, -pi / 4.0f, pi / 4.0f,
+  //     tol);
   //  float optimal_theta =
   //      find_optimal_theta_newton(H, largest_off_diag_term, tol);
 

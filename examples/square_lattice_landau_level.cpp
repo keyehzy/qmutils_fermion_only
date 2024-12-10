@@ -74,11 +74,13 @@ class SquareLatticeLandauLevel {
   }
 };
 
-static bool check_statistics(const Operator& op, Operator::Statistics s) {
+[[maybe_unused]] static bool check_statistics(const Operator& op,
+                                              Operator::Statistics s) {
   return op.statistics() == s;
 }
 
-static bool check_spin_conservation(const Term::container_type& ops) {
+[[maybe_unused]] static bool check_spin_conservation(
+    const Term::container_type& ops) {
   int spin_up_count = 0;
   int spin_down_count = 0;
 
@@ -93,7 +95,8 @@ static bool check_spin_conservation(const Term::container_type& ops) {
   return spin_up_count == 0 && spin_down_count == 0;
 }
 
-static bool check_particle_conservation(const Term::container_type& ops) {
+[[maybe_unused]] static bool check_particle_conservation(
+    const Term::container_type& ops) {
   int creation_count = 0;
   for (const auto& op : ops) {
     creation_count += (op.type() == Operator::Type::Creation) ? 1 : -1;
@@ -148,7 +151,8 @@ static std::vector<std::pair<float, float>> calculate_integrated_dos(
 }
 
 template <typename Index>
-static void demonstrate_cls(const Expression& hamiltonian, const Index& index) {
+[[maybe_unused]] static void demonstrate_cls(const Expression& hamiltonian,
+                                             const Index& index) {
   // Construct the compact localized state
   auto s = Operator::Spin::Up;
   Expression cls_state;
