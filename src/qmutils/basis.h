@@ -1,6 +1,7 @@
 #pragma once
 
 #include <algorithm>
+#include <optional>
 #include <unordered_map>
 
 #include "qmutils/assert.h"
@@ -96,19 +97,16 @@ class BasisBase {
 
 class FermionicBasis : public BasisBase {
  public:
-  FermionicBasis(size_t orbitals, size_t particles)
-      : BasisBase(orbitals, particles) {
-    QMUTILS_ASSERT(orbitals <= Operator::max_orbital_size());
-    QMUTILS_ASSERT(particles <= 2 * orbitals);
-    size_t basis_size = compute_basis_size(orbitals, particles);
-    m_index_map.reserve(basis_size);
-    generate_basis();
-    QMUTILS_ASSERT(m_index_map.size() == basis_size);
-    std::sort(m_index_map.begin(), m_index_map.end(), term_sorter);
-  }
+  FermionicBasis(size_t orbitals, size_t particles,
+                 std::optional<int> required_sz = std::nullopt);
 
   void generate_combinations(operators_type& current, size_t first_orbital,
                              size_t depth) override;
+
+  void generate_spin_basis(size_t required_up, size_t required_down);
+  void generate_combinations_with_sz(operators_type& current,
+                                     size_t first_orbital, size_t remaining_up,
+                                     size_t remaining_down);
 
  private:
   static float calculate_normalization(
