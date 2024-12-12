@@ -143,7 +143,7 @@ class VMCSolver {
 };
 
 static void print_state(const arma::cx_fvec& eigvec, const Basis& basis,
-                        size_t count = 20) {
+                        size_t count = 10) {
   std::vector<Term> terms;
   for (size_t i = 0; i < basis.size(); i++) {
     terms.emplace_back(std::norm(eigvec[i]), basis.at(i).operators());
@@ -165,7 +165,8 @@ int main() {
   // Exact diagonalization
   {
     // Construct the basis
-    Basis basis(num_sites, num_sites);
+    FermionicBasis basis(num_sites, num_sites, 0);
+    std::cout << "Basis size: " << basis.size() << std::endl;
 
     // Compute Hamiltonian matrix
     auto H_matrix =
