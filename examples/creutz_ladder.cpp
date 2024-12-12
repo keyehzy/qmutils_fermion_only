@@ -1,6 +1,7 @@
 #include <armadillo>
 #include <fstream>
 
+#include "dos_utils.h"
 #include "qmutils/assert.h"
 #include "qmutils/basis.h"
 #include "qmutils/expression.h"
@@ -71,52 +72,6 @@ class CreutzLadderModel {
   }
 };
 
-static std::vector<std::pair<float, float>> calculate_dos(
-    const arma::fvec& eigenvalues, float sigma = 0.1f, size_t num_points = 1000,
-    float padding_factor = 0.1f) {
-  float E_min = eigenvalues.min();
-  float E_max = eigenvalues.max();
-  float padding = (E_max - E_min) * padding_factor;
-  E_min -= padding;
-  E_max += padding;
-
-  float dE = (E_max - E_min) / static_cast<float>(num_points - 1);
-  std::vector<std::pair<float, float>> dos(num_points);
-
-  // Calculate DOS using Gaussian broadening
-  const float normalization =
-      1.0f / (sigma * std::sqrt(2.0f * std::numbers::pi_v<float>));
-
-#pragma omp parallel for
-  for (size_t i = 0; i < num_points; ++i) {
-    float E = E_min + static_cast<float>(i) * dE;
-    float rho = 0.0f;
-
-    for (size_t j = 0; j < eigenvalues.n_elem; ++j) {
-      float delta_E = (E - eigenvalues(j)) / sigma;
-      rho += std::exp(-0.5f * delta_E * delta_E);
-    }
-
-    dos[i] = {E, rho * normalization};
-  }
-
-  return dos;
-}
-
-static std::vector<std::pair<float, float>> calculate_integrated_dos(
-    const std::vector<std::pair<float, float>>& dos) {
-  std::vector<std::pair<float, float>> integrated_dos(dos.size());
-  float integral = 0.0f;
-  float dE = dos[1].first - dos[0].first;
-
-  for (size_t i = 0; i < dos.size(); ++i) {
-    integral += dos[i].second * dE;
-    integrated_dos[i] = {dos[i].first, integral};
-  }
-
-  return integrated_dos;
-}
-
 int main() {
   const size_t L = 24;
   const size_t P = 2;
@@ -143,17 +98,18 @@ int main() {
 
   std::cout << "# Eigenvalues computed" << std::endl;
 
-  auto dos = calculate_dos(eigenvalues, 0.1f * J);
-  auto integrated_dos = calculate_integrated_dos(dos);
+  auto dos_ctx = Dos_Utils(eigenvalues, 0.1f * J);
 
   std::cout << "# DOS computed" << std::endl;
 
   std::ofstream dos_file("dos.dat");
 
-  for (size_t i = 0; i < dos.size(); ++i) {
-    dos_file << dos[i].first << " "
-             << dos[i].second / static_cast<float>(basis.size()) << " "
-             << integrated_dos[i].second / static_cast<float>(basis.size())
+  for (size_t i = 0; i < dos_ctx.dos().size(); ++i) {
+    dos_file << dos_ctx.dos()[i].first << " "
+             << dos_ctx.dos()[i].second / static_cast<float>(basis.size())
+             << " "
+             << dos_ctx.integrated_dos()[i].second /
+                    static_cast<float>(basis.size())
              << "\n";
   }
 
