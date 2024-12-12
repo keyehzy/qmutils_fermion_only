@@ -3,13 +3,13 @@
 [![Passing](https://github.com/keyehzy/qmutils/workflows/CI/badge.svg)]()
 [![License](https://img.shields.io/badge/license-MIT-blue)]()
 
-qmutils is a fast, modern C++ library for symbolic quantum mechanics calculations, focusing on fermionic systems. It provides an intuitive interface for quantum operator algebra, including efficient normal ordering and matrix element computation, while maintaining high computational performance.
+qmutils is a fast, modern C++ library for quantum mechanics calculations. It provides an intuitive interface for quantum operator algebra, including efficient normal ordering and matrix element computation.
 
 ## Why Use qmutils?
 
-- **Fast:** Optimized implementations with caching and parallel computation support dramatically improve performance, especially for complex expressions and repeated operations.  Benchmarks show significant speedup compared to naive implementations.
+- **Fast:** Optimized implementations with performance in mind, especially caching  for complex expressions and repeated operations and multi-threading.
 - **Intuitive:** Clean, modern C++ interface for defining and manipulating quantum operators and expressions.
-- **Flexible:** Works with any quantum many-body system, allowing for the study of diverse models like the Hubbard model, t-J model, and other lattice models.
+- **Flexible:** Works with any second quantized quantum many-body system, allowing for the study of diverse models like the Hubbard model, t-J model, and much others (see [examples](examples/)).
 - **Reliable:** Comprehensive test coverage and benchmarks ensure the accuracy and reliability of the library.
 
 ## Quick Start
@@ -42,7 +42,7 @@ H += t * Term::hopping(0, 1, Operator::Spin::Up);   // Hopping term
 H += u * Term::density(Operator::Spin::Up, 0);      // Density term
 
 // Work with basis states
-Basis basis(4, 2);  // 4 orbitals, 2 particles
+FermionicBasis basis(4, 2, /*Sz=*/0);  // 4 orbitals, 2 particles
 auto matrix = compute_matrix_elements<SpMat_cf>(basis, H);
 ```
 
@@ -57,15 +57,16 @@ Optional:
 - Google Test (for testing)
 - Google Benchmark (for benchmarks)
 - Armadillo (for examples)
-- OpenMP
+- OpenBLAS (for examples)
+- OpenMP (for multi-threading)
 
 
 ## Features
 - Creation/annihilation operators with spin and orbital indices.
+- Bosonic and Fermionic support.
 - Efficient symbolic normal ordering with caching.
 - Basis state management.
 - Matrix element computation (dense and sparse matrix support).
-- Fourier transformations of operators and expressions.
 - Utilities for multi-dimensional lattice indexing.
 
 
