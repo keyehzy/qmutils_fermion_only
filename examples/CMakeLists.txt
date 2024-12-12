@@ -53,6 +53,7 @@ file(GLOB EXAMPLE_FILES
   square_lattice_landau_level.cpp
   canonical_diag.cpp
   sawtooth.cpp
+  heisenberg_vmc.cpp
 )
 
 foreach(EXAMPLE_FILE ${EXAMPLE_FILES})
