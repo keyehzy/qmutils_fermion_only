@@ -285,35 +285,8 @@ template <typename Index>
   }
 }
 
-// template <size_t L>
-// static Expression transform_operator_to_AB(const Operator& op, const typename
-// SawtoothModel<L>::Index& index) {
-//   Expression result;
-
-//   auto [cell, i] = index.from_orbital(op.orbital());
-
-//   Operator A(op.type(), op.spin(), index.to_orbital(cell, 0),
-//   op.statistics()); Operator B(op.type(), op.spin(), index.to_orbital(cell,
-//   1), op.statistics()); Operator A_next(op.type(), op.spin(),
-//   index.to_orbital((cell + 1) % L, 0), op.statistics()); Operator
-//   B_next(op.type(), op.spin(), index.to_orbital((cell + 1) % L, 1),
-//   op.statistics());
-
-//   if (i == 0) {
-//     result += Term(1.0f / std::sqrt(3.0f), {A});
-//     result -= Term(1.0f / std::sqrt(2.0f), {A_next});
-//     result -= Term(1.0f / std::sqrt(6.0f), {B_next});
-//   } else {
-//     result += Term(1.0f / std::sqrt(6.0f), {A});
-//     result += Term(1.0f / std::sqrt(2.0f), {B});
-//     result += Term(1.0f / std::sqrt(3.0f), {A_next});
-//   }
-
-//   return result;
-// }
-
 int main() {
-  const size_t L = 2;
+  const size_t L = 16;
   const float t2 = 1.0f;
   const float t1 = t2 * std::sqrt(2.0f);
   BosonicBasis basis(2 * L, 2);  // 2 sites per unit cell, P particles
@@ -321,10 +294,10 @@ int main() {
 
 #if 1
   {
-    SawtoothModel<L> model(t1, t2, 2.0f);
+    SawtoothModel<L> model(t1, t2, 1.0f);
 
     auto H_matrix =
-        compute_matrix_elements<arma::cx_fmat>(basis, model.hamiltonian());
+        compute_matrix_elements<arma::sp_cx_fmat>(basis, model.hamiltonian());
 
     std::cout << "# Matrix elements computed" << std::endl;
 
@@ -332,8 +305,7 @@ int main() {
         arma::approx_equal(H_matrix, H_matrix.t(), "absdiff", 1e-4f));
 
     arma::fvec eigenvalues;
-    arma::cx_fmat eigenvectors;
-    arma::eig_sym(eigenvalues, eigenvectors, H_matrix);
+    arma::eig_sym(eigenvalues, arma::cx_fmat(H_matrix));
 
     std::cout << "# Eigenvalues computed" << std::endl;
     std::cout << eigenvalues << std::endl;
