@@ -1,6 +1,7 @@
 #include <armadillo>
 #include <fstream>
 
+#include "dos_utils.h"
 #include "qmutils/assert.h"
 #include "qmutils/basis.h"
 #include "qmutils/expression.h"
@@ -286,7 +287,7 @@ template <typename Index>
 }
 
 int main() {
-  const size_t L = 16;
+  const size_t L = 96;
   const float t2 = 1.0f;
   const float t1 = t2 * std::sqrt(2.0f);
   BosonicBasis basis(2 * L, 2);  // 2 sites per unit cell, P particles
@@ -307,22 +308,22 @@ int main() {
     arma::fvec eigenvalues;
     arma::eig_sym(eigenvalues, arma::cx_fmat(H_matrix));
 
-    std::cout << "# Eigenvalues computed" << std::endl;
+    // std::cout << "# Eigenvalues computed" << std::endl;
     std::cout << eigenvalues << std::endl;
 
-    // auto dos = calculate_dos(eigenvalues, 0.1f);
-    // auto integrated_dos = calculate_integrated_dos(dos);
+    auto dos_utils = Dos_Utils(eigenvalues, 0.05f);
+    std::cout << "# DOS computed" << std::endl;
 
-    // std::cout << "# DOS computed" << std::endl;
+    std::ofstream dos_file("dos.dat");
 
-    // std::ofstream dos_file("dos.dat");
-
-    // for (size_t i = 0; i < dos.size(); ++i) {
-    //   dos_file << dos[i].first << " "
-    //            << dos[i].second / static_cast<float>(basis.size()) << " "
-    //            << integrated_dos[i].second / static_cast<float>(basis.size())
-    //            << "\n";
-    // }
+    for (size_t i = 0; i < dos_utils.dos().size(); ++i) {
+      dos_file << dos_utils.dos()[i].first << " "
+               << dos_utils.dos()[i].second / static_cast<float>(basis.size())
+               << " "
+               << dos_utils.integrated_dos()[i].second /
+                      static_cast<float>(basis.size())
+               << "\n";
+    }
   }
 #endif
 

@@ -137,13 +137,13 @@ template <typename Index>
 }
 
 int main() {
-  const size_t Lx = 8;
-  const size_t Ly = 8;
+  const size_t Lx = 16;
+  const size_t Ly = 16;
   const size_t particles = 2;
 
   const float t = 1.0f;
-  const float phi = 0.0f;
-  const float U = 2.0f;
+  const float phi = 6.0f;
+  const float U = 4.0f;
 
   SquareLatticeLandauLevel<Lx, Ly> model(t, phi, U);
 
@@ -163,15 +163,14 @@ int main() {
   std::cout << "# Finished building the model" << std::endl;
 
   BosonicBasis basis(Lx * Ly, particles);
-  // std::cout << basis.size() << std::endl;
+  std::cout << basis.size() << std::endl;
   auto H_matrix =
-      compute_matrix_elements<arma::cx_fmat>(basis, model.hamiltonian());
+      compute_matrix_elements<arma::sp_cx_fmat>(basis, model.hamiltonian());
   QMUTILS_ASSERT(arma::approx_equal(H_matrix, H_matrix.t(), "absdiff", 1e-4f));
+  std::cout << "# Finished computing matrix elements" << std::endl;
   arma::fvec eigenvalues;
-  arma::cx_fmat eigenvectors;
-  arma::eig_sym(eigenvalues, eigenvectors, H_matrix);
-
-  // std::cout << U << eigenvalues.t();
+  arma::eig_sym(eigenvalues, arma::cx_fmat(H_matrix));
+  std::cout << "# Finished computing eigenvalues" << std::endl;
 
   auto dos_ctx = Dos_Utils(eigenvalues, 0.1f);
 
