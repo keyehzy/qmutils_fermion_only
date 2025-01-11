@@ -185,8 +185,8 @@ int main() {
 
   // Variatonal Monte Carlo
   {
-    const size_t num_samples = 10000;
-    const size_t num_iterations = 1000;
+    const size_t num_samples = 100;
+    const size_t num_iterations = 10;
     const float learning_rate = 0.01f;
 
     VariationalWavefunction wavefunction(num_sites);
