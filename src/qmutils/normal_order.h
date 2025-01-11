@@ -25,7 +25,9 @@ class NormalOrderer {
 
  private:
   Expression normal_order_iterative(const operators_type& ops);
-  Expression normal_order_recursive(operators_type ops);
+  Expression normal_order_recursive(const operators_type& ops);
+  Expression normal_order_recursive(const operators_type& ops,
+                                    std::size_t ops_hash);
   Expression handle_non_commuting(const operators_type& ops, size_t index,
                                   float sign);
 

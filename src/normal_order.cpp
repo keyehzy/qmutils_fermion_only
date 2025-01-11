@@ -76,37 +76,45 @@ Expression NormalOrderer::normal_order_iterative(const operators_type& ops) {
   return result;
 }
 
-Expression NormalOrderer::normal_order_recursive(operators_type ops) {
+Expression NormalOrderer::normal_order_recursive(const operators_type& ops) {
   if (ops.size() < 2) {
     return Expression(Term(ops));
   }
 
-  auto ops_key = std::hash<operators_type>{}(ops);
-  if (auto cached_result = m_cache.get(ops_key)) {
+  std::size_t ops_key = std::hash<operators_type>{}(ops);
+  return normal_order_recursive(ops, ops_key);
+}
+
+Expression NormalOrderer::normal_order_recursive(const operators_type& ops,
+                                                 std::size_t ops_hash) {
+  if (auto cached_result = m_cache.get(ops_hash)) {
     m_cache_hits++;
     return cached_result.value();
   }
   m_cache_misses++;
 
-  coefficient_type phase = 1.0;
-  for (size_t i = 1; i < ops.size(); ++i) {
+  operators_type local_ops = ops;
+  coefficient_type phase = 1.0f;
+
+  for (size_t i = 1; i < local_ops.size(); ++i) {
     size_t j = i;
-    while (j > 0 && ops[j] < ops[j - 1]) {
-      float sign = phase_factor(ops[j], ops[j - 1]);
-      if (ops[j].commutes_with(ops[j - 1])) {
-        std::swap(ops[j], ops[j - 1]);
+    while (j > 0 && local_ops[j] < local_ops[j - 1]) {
+      float sign = phase_factor(local_ops[j], local_ops[j - 1]);
+      if (local_ops[j].commutes_with(local_ops[j - 1])) {
+        std::swap(local_ops[j], local_ops[j - 1]);
         phase *= sign;
         --j;
       } else {
-        Expression result = phase * handle_non_commuting(ops, j - 1, sign);
-        m_cache.put(ops_key, result);
+        Expression result =
+            phase * handle_non_commuting(local_ops, j - 1, sign);
+        m_cache.put(ops_hash, result);
         return result;
       }
     }
   }
 
-  Expression result(Term(phase, ops));
-  m_cache.put(ops_key, result);
+  Expression result(Term(phase, local_ops));
+  m_cache.put(ops_hash, result);
   return result;
 }
 
@@ -114,8 +122,10 @@ Expression NormalOrderer::handle_non_commuting(const operators_type& ops,
                                                size_t index, float sign) {
   operators_type contracted(ops);
   contracted.erase(contracted.begin() + index, contracted.begin() + index + 2);
+
   operators_type swapped(ops);
   std::swap(swapped[index], swapped[index + 1]);
+
   return normal_order_recursive(contracted) +
          sign * normal_order_recursive(swapped);
 }
