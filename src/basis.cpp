@@ -24,8 +24,8 @@ FermionicBasis::FermionicBasis(size_t orbitals, size_t particles,
         static_cast<size_t>((total - required_sz.value()) / 2);
     QMUTILS_ASSERT(required_up + required_down == particles);
 
-    int max_sz = static_cast<int>(particles);
-    QMUTILS_ASSERT(std::abs(required_sz.value()) <= max_sz);
+    QMUTILS_ASSERT(std::abs(required_sz.value()) <=
+                   static_cast<int>(particles));
 
     size_t basis_size = qmutils_choose(m_orbitals, required_up) *
                         qmutils_choose(m_orbitals, required_down);
