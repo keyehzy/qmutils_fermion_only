@@ -38,7 +38,7 @@ class VariationalWavefunction {
   float evaluate(const std::vector<int>& configuration) const {
     float result = 0.0f;
     for (size_t i = 0; i < m_sites; ++i) {
-      result += m_params[i] * configuration[i];
+      result += m_params[i] * static_cast<float>(configuration[i]);
     }
     return std::exp(result);
   }
@@ -108,7 +108,7 @@ class VMCSolver {
 
       // Compute gradient terms
       for (size_t j = 0; j < m_wavefunction.num_params(); ++j) {
-        gradient(j) += 2.0f * config[j] *
+        gradient(j) += 2.0f * static_cast<float>(config[j]) *
                        (local_energy - energy_sum / weight_sum) * weight *
                        weight;
       }
@@ -131,7 +131,7 @@ class VMCSolver {
     float energy = 0.0f;
     for (size_t i = 0; i < m_model.sites(); ++i) {
       size_t j = (i + 1) % m_model.sites();
-      energy += 0.5f * m_model.J() * (config[i] * config[j]);
+      energy += 0.5f * m_model.J() * static_cast<float>(config[i] * config[j]);
     }
     return energy;
   }
