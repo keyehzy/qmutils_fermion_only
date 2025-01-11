@@ -80,6 +80,13 @@ class BasisBase {
     return m_index_map[i];
   }
 
+  template <typename Fn>
+  void filter(Fn&& fn) {
+    m_index_map.erase(std::remove_if(m_index_map.begin(), m_index_map.end(),
+                                     std::forward<Fn>(fn)),
+                      m_index_map.end());
+  }
+
   void generate_basis();
 
   virtual void generate_combinations(operators_type& current,
