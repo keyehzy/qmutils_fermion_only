@@ -227,7 +227,7 @@ int main() {
   float U = 4.0f;
   Expression hamiltonian;
 
-  const size_t L = 4;
+  const size_t L = 2;
 
   for (size_t i = 0; i < L - 1; i++) {
     hamiltonian +=
