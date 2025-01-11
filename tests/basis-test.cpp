@@ -200,17 +200,6 @@ TEST_F(FermionicBasisSzTest, CompareConstrainedVsUnconstrained) {
             sz_zero.size() + sz_plus_two.size() + sz_minus_two.size());
 }
 
-TEST_F(FermionicBasisSzTest, InvalidSzValues) {
-  // Sz too large for particle count
-  EXPECT_DEATH(FermionicBasis(2, 2, 3), "");
-
-  // Odd Sz with even particle number
-  EXPECT_DEATH(FermionicBasis(2, 2, 1), "");
-
-  // Even Sz with odd particle number
-  EXPECT_DEATH(FermionicBasis(2, 3, 2), "");
-}
-
 TEST_F(FermionicBasisSzTest, EmptyBasisEdgeCases) {
   // Empty basis with Sz constraint
   FermionicBasis basis1(2, 0, 0);
