@@ -8,6 +8,37 @@
 
 namespace qmutils {
 
+template <typename VectorType, typename Basis>
+VectorType compute_vector_elements_serial(const Basis& basis,
+                                          const Expression& A) {
+  VectorType vector_elements(basis.size());
+  NormalOrderer orderer;
+  for (size_t i = 0; i < basis.size(); ++i) {
+    Expression left(basis.at(i));
+    Expression product = orderer.normal_order(left.adjoint() * A);
+    vector_elements(i) = product[{}];
+  }
+  return vector_elements;
+}
+
+template <typename VectorType, typename Basis>
+VectorType compute_vector_elements(const Basis& basis, const Expression& A) {
+  VectorType vector_elements(basis.size());
+
+#pragma omp parallel
+  {
+    NormalOrderer orderer;
+#pragma omp for schedule(dynamic)
+    for (size_t i = 0; i < basis.size(); ++i) {
+      Expression left(basis.at(i));
+      Expression product = orderer.normal_order(left.adjoint() * A);
+      vector_elements(i) = product[{}];
+    }
+  }
+
+  return vector_elements;
+}
+
 template <typename MatrixType, typename Basis>
 MatrixType compute_matrix_elements_serial(const Basis& basis,
                                           const Expression& A) {
