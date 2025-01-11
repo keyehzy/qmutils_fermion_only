@@ -468,11 +468,11 @@ int main() {
   print_expression(momentum_hamiltonian, model.index());
   std::cout << "\n";
 
-  std::cout << "Diagonalizing:" << "\n";
+  // std::cout << "Diagonalizing:" << "\n";
 
-  const size_t num_bands = 6;
-  BandStructure band_structure = diagonalize_multi_band_model<Lx, Ly>(
-      momentum_hamiltonian, model.index(), num_bands);
+  // const size_t num_bands = 6;
+  // BandStructure band_structure = diagonalize_multi_band_model<Lx, Ly>(
+  //     momentum_hamiltonian, model.index(), num_bands);
 
   //   std::ofstream out_file("band_structure.dat");
   //   for (size_t i = 0; i < band_structure.k_points.size(); ++i) {
@@ -484,38 +484,38 @@ int main() {
   //     out_file << "\n";
   //   }
 
-  std::cout << "Diatomic Kagome Hamiltonian in diagonal form:" << "\n";
-  Expression transformed_op = transform_expression(
-      transform_to_band_basis<Lx, Ly>, momentum_hamiltonian, band_structure,
-      model.index(), num_bands);
-  print_expression(transformed_op, model.index());
-  std::cout << "\n";
+  // std::cout << "Diatomic Kagome Hamiltonian in diagonal form:" << "\n";
+  // Expression transformed_op = transform_expression(
+  //     transform_to_band_basis<Lx, Ly>, momentum_hamiltonian, band_structure,
+  //     model.index(), num_bands);
+  // print_expression(transformed_op, model.index());
+  // std::cout << "\n";
 
-  std::cout << "Check if transformed Hamiltonian have arbitrary band index"
-            << std::endl;
+  // std::cout << "Check if transformed Hamiltonian have arbitrary band index"
+  //           << std::endl;
 
-  for (const auto& [ops, coeff] : transformed_op.terms()) {
-    std::unordered_map<size_t, size_t> band_index_map;
-    Term term(coeff, ops);
+  // for (const auto& [ops, coeff] : transformed_op.terms()) {
+  //   std::unordered_map<size_t, size_t> band_index_map;
+  //   Term term(coeff, ops);
 
-    for (const auto& op : term.operators()) {
-      auto [kx, ky, band] = model.index().from_orbital(op.orbital());
-      if (op.type() == Operator::Type::Creation) {
-        band_index_map[band] += 1;
-      } else {
-        band_index_map[band] -= 1;
-      }
-    }
+  //   for (const auto& op : term.operators()) {
+  //     auto [kx, ky, band] = model.index().from_orbital(op.orbital());
+  //     if (op.type() == Operator::Type::Creation) {
+  //       band_index_map[band] += 1;
+  //     } else {
+  //       band_index_map[band] -= 1;
+  //     }
+  //   }
 
-    if (std::any_of(band_index_map.begin(), band_index_map.end(),
-                    [](const auto& pair) { return pair.second != 0; })) {
-      std::cout << "Band index is arbitrary: "
-                << term_to_string(term, model.index()) << "\n";
-    } else {
-      std::cout << "Band index is not arbitrary: "
-                << term_to_string(term, model.index()) << "\n";
-    }
-  }
+  //   if (std::any_of(band_index_map.begin(), band_index_map.end(),
+  //                   [](const auto& pair) { return pair.second != 0; })) {
+  //     std::cout << "Band index is arbitrary: "
+  //               << term_to_string(term, model.index()) << "\n";
+  //   } else {
+  //     std::cout << "Band index is not arbitrary: "
+  //               << term_to_string(term, model.index()) << "\n";
+  //   }
+  // }
 
   // std::cout << "Removing inter-band terms:" << "\n";
   // Expression projected_op =
