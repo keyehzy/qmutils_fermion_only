@@ -26,13 +26,6 @@ Expression NormalOrderer::normal_order_recursive(const operators_type& ops) {
   }
 
   std::size_t ops_key = std::hash<operators_type>{}(ops);
-
-  if (std::is_sorted(ops.begin(), ops.end())) {
-    Expression result(ops);
-    m_cache.put(ops_key, result);
-    return result;
-  }
-
   return normal_order_recursive(ops, ops_key);
 }
 
