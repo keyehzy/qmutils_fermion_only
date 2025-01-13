@@ -23,6 +23,10 @@ class Expression {
     m_terms[{op}] = coefficient_type(1.0f, 0.0f);
   }
 
+  explicit Expression(const operators_type& ops) {
+    m_terms[ops] = coefficient_type(1.0f, 0.0f);
+  }
+
   explicit Expression(const coefficient_type& coeff,
                       const operators_type& ops) {
     m_terms[ops] = coeff;

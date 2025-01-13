@@ -22,10 +22,17 @@ static constexpr float phase_factor(const Operator& a, const Operator& b) {
 
 Expression NormalOrderer::normal_order_recursive(const operators_type& ops) {
   if (ops.size() < 2) {
-    return Expression(Term(ops));
+    return Expression(ops);
   }
 
   std::size_t ops_key = std::hash<operators_type>{}(ops);
+
+  if (std::is_sorted(ops.begin(), ops.end())) {
+    Expression result(ops);
+    m_cache.put(ops_key, result);
+    return result;
+  }
+
   return normal_order_recursive(ops, ops_key);
 }
 
@@ -36,12 +43,6 @@ Expression NormalOrderer::normal_order_recursive(const operators_type& ops,
     return cached_result.value();
   }
   m_cache_misses++;
-
-  if (std::is_sorted(ops.begin(), ops.end())) {
-    Expression result(1.0f, ops);
-    m_cache.put(ops_hash, result);
-    return result;
-  }
 
   std::unique_ptr<operators_type> local_ops_ptr = m_pool.acquire();
   operators_type& local_ops = *local_ops_ptr;
