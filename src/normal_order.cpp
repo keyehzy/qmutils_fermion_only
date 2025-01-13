@@ -37,6 +37,12 @@ Expression NormalOrderer::normal_order_recursive(const operators_type& ops,
   }
   m_cache_misses++;
 
+  if (std::is_sorted(ops.begin(), ops.end())) {
+    Expression result(1.0f, ops);
+    m_cache.put(ops_hash, result);
+    return result;
+  }
+
   std::unique_ptr<operators_type> local_ops_ptr = m_pool.acquire();
   operators_type& local_ops = *local_ops_ptr;
   local_ops.assign(ops.begin(), ops.end());
@@ -62,6 +68,7 @@ Expression NormalOrderer::normal_order_recursive(const operators_type& ops,
 
   Expression result(phase, local_ops);
   m_cache.put(ops_hash, result);
+  m_pool.release(std::move(local_ops_ptr));
   return result;
 }
 
