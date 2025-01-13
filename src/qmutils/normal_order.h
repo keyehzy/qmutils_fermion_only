@@ -5,6 +5,7 @@
 
 #include "qmutils/expression.h"
 #include "qmutils/lru_cache.h"
+#include "qmutils/operator_pool.h"
 #include "qmutils/term.h"
 
 namespace qmutils {
@@ -46,6 +47,7 @@ class NormalOrderer {
   };
 
   std::priority_queue<QueueElement> m_queue;
+  OperatorPool m_pool;
   size_t m_cache_hits{0};
   size_t m_cache_misses{0};
 };

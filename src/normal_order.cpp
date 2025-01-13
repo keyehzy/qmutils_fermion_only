@@ -16,7 +16,7 @@ Expression NormalOrderer::normal_order(const Expression& expr) {
   return result;
 }
 
-static float phase_factor(const Operator& a, const Operator& b) {
+static constexpr float phase_factor(const Operator& a, const Operator& b) {
   return Operator::is_fermion(a) && Operator::is_fermion(b) ? -1.0f : 1.0f;
 }
 
@@ -93,7 +93,9 @@ Expression NormalOrderer::normal_order_recursive(const operators_type& ops,
   }
   m_cache_misses++;
 
-  operators_type local_ops = ops;
+  std::unique_ptr<operators_type> local_ops_ptr = m_pool.acquire();
+  operators_type& local_ops = *local_ops_ptr;
+  local_ops.assign(ops.begin(), ops.end());
   coefficient_type phase = 1.0f;
 
   for (size_t i = 1; i < local_ops.size(); ++i) {
@@ -108,26 +110,34 @@ Expression NormalOrderer::normal_order_recursive(const operators_type& ops,
         Expression result =
             phase * handle_non_commuting(local_ops, j - 1, sign);
         m_cache.put(ops_hash, result);
+        m_pool.release(std::move(local_ops_ptr));
         return result;
       }
     }
   }
 
-  Expression result(Term(phase, local_ops));
+  Expression result(phase, local_ops);
   m_cache.put(ops_hash, result);
   return result;
 }
 
 Expression NormalOrderer::handle_non_commuting(const operators_type& ops,
                                                size_t index, float sign) {
-  operators_type contracted(ops);
-  contracted.erase(contracted.begin() + index, contracted.begin() + index + 2);
+  std::unique_ptr<operators_type> contracted_ptr = m_pool.acquire();
+  operators_type& contracted = *contracted_ptr;
+  contracted.assign(ops.begin(), ops.begin() + index);
+  contracted.insert(contracted.end(), ops.begin() + index + 2, ops.end());
 
-  operators_type swapped(ops);
+  std::unique_ptr<operators_type> swapped_ptr = m_pool.acquire();
+  operators_type& swapped = *swapped_ptr;
+  swapped.assign(ops.begin(), ops.end());
   std::swap(swapped[index], swapped[index + 1]);
 
-  return normal_order_recursive(contracted) +
-         sign * normal_order_recursive(swapped);
+  Expression result = normal_order_recursive(contracted) +
+                      sign * normal_order_recursive(swapped);
+  m_pool.release(std::move(contracted_ptr));
+  m_pool.release(std::move(swapped_ptr));
+  return result;
 }
 
 void NormalOrderer::print_cache_stats() const {

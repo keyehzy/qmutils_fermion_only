@@ -41,7 +41,7 @@ class LRUCache {
   }
 
   void put(const key_type& key, const value_type& value) {
-    put(key, value_type(value));
+    put(std::move(key), value_type(value));
   }
 
   std::optional<std::reference_wrapper<const value_type>> get(
