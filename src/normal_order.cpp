@@ -20,62 +20,6 @@ static constexpr float phase_factor(const Operator& a, const Operator& b) {
   return Operator::is_fermion(a) && Operator::is_fermion(b) ? -1.0f : 1.0f;
 }
 
-Expression NormalOrderer::normal_order_iterative(const operators_type& ops) {
-  Expression result;
-  m_queue.emplace(ops, 1.0);
-
-  while (!m_queue.empty()) {
-    auto [current, phase] = m_queue.top();
-    m_queue.pop();
-
-    if (current.size() < 2) {
-      result += Term(phase, current);
-      continue;
-    }
-
-    auto ops_key = std::hash<operators_type>{}(current);
-    if (auto cached_result = m_cache.get(ops_key)) {
-      m_cache_hits++;
-      result += phase * cached_result.value();
-      continue;
-    }
-    m_cache_misses++;
-
-    bool is_sorted = true;
-
-    for (size_t i = 1; i < current.size(); ++i) {
-      size_t j = i;
-      while (j > 0 && current[j] < current[j - 1]) {
-        float sign = phase_factor(current[j], current[j - 1]);
-        if (current[j].commutes_with(current[j - 1])) {
-          std::swap(current[j], current[j - 1]);
-          phase *= sign;
-          --j;
-        } else {
-          is_sorted = false;
-          operators_type contracted(current);
-          contracted.erase(contracted.begin() + j - 1,
-                           contracted.begin() + j + 1);
-          m_queue.emplace(std::move(contracted), phase);
-
-          operators_type swapped(current);
-          std::swap(swapped[j - 1], swapped[j]);
-          m_queue.emplace(std::move(swapped), sign * phase);
-          break;
-        }
-      }
-      if (!is_sorted) break;
-    }
-    if (is_sorted) {
-      Expression partial(Term(phase, current));
-      m_cache.put(ops_key, partial);
-      result += partial;
-    }
-  }
-
-  return result;
-}
-
 Expression NormalOrderer::normal_order_recursive(const operators_type& ops) {
   if (ops.size() < 2) {
     return Expression(Term(ops));

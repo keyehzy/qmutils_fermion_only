@@ -25,7 +25,6 @@ class NormalOrderer {
   void print_cache_stats() const;
 
  private:
-  Expression normal_order_iterative(const operators_type& ops);
   Expression normal_order_recursive(const operators_type& ops);
   Expression normal_order_recursive(const operators_type& ops,
                                     std::size_t ops_hash);
@@ -34,19 +33,6 @@ class NormalOrderer {
 
   LRUCache<size_t, Expression> m_cache{1 << 20};
 
-  struct QueueElement {
-    operators_type ops;
-    coefficient_type phase;
-
-    QueueElement(const operators_type& ops, coefficient_type phase)
-        : ops(ops), phase(phase) {}
-
-    bool operator<(const QueueElement& other) const {
-      return other.ops.size() < this->ops.size();
-    }
-  };
-
-  std::priority_queue<QueueElement> m_queue;
   OperatorPool m_pool;
   size_t m_cache_hits{0};
   size_t m_cache_misses{0};
