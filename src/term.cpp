@@ -5,6 +5,11 @@
 
 namespace qmutils {
 
+std::ostream& operator<<(std::ostream& os, const Term& term) {
+  os << term.to_string();
+  return os;
+}
+
 Term Term::adjoint() const {
   container_type adjoint_operators;
   adjoint_operators.reserve(m_operators.size());

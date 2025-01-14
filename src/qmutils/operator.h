@@ -2,6 +2,7 @@
 
 #include <bit>
 #include <cstdint>
+#include <ostream>
 #include <string>
 #include <type_traits>
 
@@ -91,6 +92,8 @@ class Operator {
   }
 
   [[nodiscard]] std::string to_string() const;
+
+  friend std::ostream &operator<<(std::ostream &os, const Operator &op);
 
   [[nodiscard]] static constexpr Operator creation(Spin spin,
                                                    size_t orbital) noexcept {

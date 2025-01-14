@@ -170,6 +170,8 @@ class Expression {
 
   std::string to_string() const;
 
+  friend std::ostream& operator<<(std::ostream& os, const Expression& expr);
+
   void normalize();
 
   Expression adjoint() const;

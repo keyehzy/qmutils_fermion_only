@@ -2,7 +2,7 @@
 
 #include <algorithm>
 #include <complex>
-#include <cstdint>
+#include <ostream>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -84,6 +84,8 @@ class Term {
   Term flip_spin() const;
 
   std::string to_string() const;
+
+  friend std::ostream& operator<<(std::ostream& os, const Term& term);
 
   friend Term operator*(Term term, const Term& other) {
     term *= other;

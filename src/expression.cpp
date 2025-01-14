@@ -4,6 +4,11 @@
 
 namespace qmutils {
 
+std::ostream& operator<<(std::ostream& os, const Expression& expression) {
+  os << expression.to_string();
+  return os;
+}
+
 static bool constexpr both_are_fermions_and_equal(const Operator& a,
                                                   const Operator& b) {
   return Operator::is_fermion(a) && Operator::is_fermion(b) && a == b;

@@ -12,4 +12,9 @@ std::string Operator::to_string() const {
   return oss.str();
 }
 
+std::ostream& operator<<(std::ostream& os, const Operator& op) {
+  os << op.to_string();
+  return os;
+}
+
 }  // namespace qmutils
