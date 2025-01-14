@@ -12,6 +12,7 @@ class Expression {
  public:
   using coefficient_type = Term::coefficient_type;
   using operators_type = Term::container_type;
+  using terms_type = std::unordered_map<operators_type, coefficient_type>;
 
   Expression() = default;
 
@@ -84,7 +85,7 @@ class Expression {
   }
 
   Expression& operator*=(const Expression& other) {
-    std::unordered_map<operators_type, coefficient_type> new_terms;
+    terms_type new_terms;
     for (const auto& [ops1, coeff1] : m_terms) {
       for (const auto& [ops2, coeff2] : other.m_terms) {
         operators_type new_ops;
@@ -100,7 +101,7 @@ class Expression {
   }
 
   Expression& operator*=(const Term& term) {
-    std::unordered_map<operators_type, coefficient_type> new_terms;
+    terms_type new_terms;
     for (const auto& [ops, coeff] : m_terms) {
       operators_type new_ops;
       new_ops.reserve(ops.size() + term.operators().size());
@@ -138,6 +139,16 @@ class Expression {
     return lhs;
   }
 
+  friend Expression operator*(Expression lhs, const Term& rhs) {
+    lhs *= rhs;
+    return lhs;
+  }
+
+  friend Expression operator*(const Term& lhs, Expression rhs) {
+    rhs *= lhs;
+    return rhs;
+  }
+
   friend Expression operator*(Expression lhs, const coefficient_type& rhs) {
     lhs *= rhs;
     return lhs;
@@ -154,11 +165,11 @@ class Expression {
 
   size_t size() const { return m_terms.size(); }
 
-  const std::unordered_map<operators_type, coefficient_type>& terms() const {
+  const terms_type& terms() const {
     return m_terms;
   }
 
-  std::unordered_map<operators_type, coefficient_type>& terms() {
+  terms_type& terms() {
     return m_terms;
   }
 
@@ -195,7 +206,7 @@ class Expression {
   }
 
  private:
-  std::unordered_map<operators_type, coefficient_type> m_terms;
+  terms_type m_terms;
 };
 
 struct Expression::Fermion {
