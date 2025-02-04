@@ -29,7 +29,7 @@ class NormalOrderer {
   Expression normal_order_recursive(const operators_type& ops,
                                     std::size_t ops_hash);
   Expression handle_non_commuting(const operators_type& ops, size_t index,
-                                  float sign);
+                                  size_t phase);
 
   LRUCache<size_t, Expression> m_cache{1 << 20};
 
