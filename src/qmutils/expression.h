@@ -165,13 +165,9 @@ class Expression {
 
   size_t size() const { return m_terms.size(); }
 
-  const terms_type& terms() const {
-    return m_terms;
-  }
+  const terms_type& terms() const { return m_terms; }
 
-  terms_type& terms() {
-    return m_terms;
-  }
+  terms_type& terms() { return m_terms; }
 
   bool operator==(const Expression& other) const {
     return m_terms == other.m_terms;

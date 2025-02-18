@@ -1,4 +1,5 @@
 #include <armadillo>
+#include <fstream>
 #include <iostream>
 
 #include "dos_utils.h"
@@ -71,16 +72,33 @@ class KagomeModel {
 };
 
 int main() {
-  const size_t Lx = 9;
-  const size_t Ly = 9;
+  const size_t Lx = 8;
+  const size_t Ly = 8;
   const size_t P = 2;
-  KagomeModel<Lx, Ly> model(1.0f, 0.0f);
-  BosonicBasis basis(Lx * Ly * 3, P);  // 3 sites per unit cell, P particles
+  const float t1 = 1.0f;
+  const float U = 0.0f;
+  KagomeModel<Lx, Ly> model(t1, U);
+  HardCoreBosonicBasis basis(Lx * Ly * 3,
+                             P);  // 3 sites per unit cell, P particles
   auto H_matrix =
       compute_matrix_elements<arma::sp_cx_fmat>(basis, model.hamiltonian());
   arma::fvec eigenvalues;
   arma::eig_sym(eigenvalues, arma::cx_fmat(H_matrix));
-  std::cout << eigenvalues << std::endl;
+  // std::cout << eigenvalues << std::endl;
+
+  std::ostringstream filename;
+  filename << "eigenvalues_Lx" << Lx << "_Ly" << Ly << "_P" << P << "_t1" << t1
+           << "_U" << U << ".dat";
+
+  std::ofstream outfile(filename.str());
+  if (outfile.is_open()) {
+    for (size_t i = 0; i < eigenvalues.n_elem; ++i) {
+      outfile << eigenvalues[i] << std::endl;
+    }
+    outfile.close();
+  } else {
+    std::cerr << "Error opening file: " << filename.str() << std::endl;
+  }
 
   //   Dos_Utils dos_ctx(eigenvalues, 0.1f, 1000, 0.1f);
 
