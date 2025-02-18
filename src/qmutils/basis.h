@@ -163,6 +163,33 @@ class BosonicBasis : public BasisBase {
   }
 };
 
+class HardCoreBosonicBasis : public BasisBase {
+ public:
+  HardCoreBosonicBasis(size_t orbitals, size_t particles)
+      : BasisBase(orbitals, particles) {
+    QMUTILS_ASSERT(orbitals <= Operator::max_orbital_size());
+    size_t basis_size = compute_basis_size(orbitals, particles);
+    m_index_map.reserve(basis_size);
+    generate_basis();
+    QMUTILS_ASSERT(m_index_map.size() == basis_size);
+    std::sort(m_index_map.begin(), m_index_map.end(), term_sorter);
+  }
+
+  void generate_combinations(operators_type& current, size_t first_orbital,
+                             size_t depth) override;
+
+ private:
+  static float calculate_normalization(
+      [[maybe_unused]] const operators_type& ops) {
+    return 1.0f;
+  }
+
+  static constexpr uint64_t compute_basis_size(uint64_t orbitals,
+                                               uint64_t particles) {
+    return qmutils_choose(orbitals, particles);
+  }
+};
+
 using Basis = FermionicBasis;
 
 }  // namespace qmutils
