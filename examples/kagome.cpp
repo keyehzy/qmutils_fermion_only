@@ -166,8 +166,8 @@ class KagomeModel {
 };
 
 int main() {
-  const size_t Lx = 8;
-  const size_t Ly = 8;
+  const size_t Lx = 6;
+  const size_t Ly = 6;
   const size_t P = 2;
   const float t1 = 1.0f;
   const float U = 0.5f;
@@ -194,8 +194,7 @@ int main() {
   size_t Xoffset = Lx / 2;
   size_t Yoffset = Ly / 2;
 
-  auto state =
-      model.v(Xoffset, Yoffset + 0) * model.v(Xoffset + 1, Yoffset + 0);
+  auto state = model.v(Xoffset + 0, Yoffset + 0) * model.f(Yoffset + 0);
   // (model.v(Xoffset - 1, Yoffset + 0) * model.v(Xoffset + 0, Yoffset - 1) +
   //  model.v(Xoffset, Yoffset + 0) * model.v(Xoffset - 1, Yoffset - 1)) +
   // (std::sqrt(Lx * Ly) / 6.0f) * model.f(Yoffset + 0) * model.g(Xoffset + 0);
@@ -205,11 +204,13 @@ int main() {
   state_vector /= arma::norm(state_vector);
 
   float initial_time = 0.0f;
-  float final_time = 250.0f / t1;
-  size_t num_time_steps = 1500;
+  float final_time = 100.0f / t1;
+  size_t num_time_steps = 1000;
   TimeIntegrator integrator(initial_time, final_time, num_time_steps, H_matrix);
 
   std::ofstream outfile("/tmp/kagome_evolution.dat");
+
+  // auto initial_state_vector = state_vector;
 
   size_t frame = 0;
   do {
@@ -219,6 +220,10 @@ int main() {
                 << arma::cdot(state_vector, H_matrix * state_vector).real()
                 << "\n";
     }
+
+    // outfile << frame << " "
+    //         << std::norm(arma::cdot(initial_state_vector, state_vector))
+    //         << std::endl;
     outfile << "\n\n# Frame " << frame << "\n";
     outfile << "# x y density\n";
 

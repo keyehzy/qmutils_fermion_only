@@ -39,7 +39,7 @@ class TimeIntegrator {
       std::abort();
     }
 
-    state_vector = result;
+    state_vector = result / arma::norm(result);
     ++counter_;
     return true;
   }
