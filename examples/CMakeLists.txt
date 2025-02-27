@@ -55,6 +55,7 @@ file(GLOB EXAMPLE_FILES
   sawtooth.cpp
   heisenberg_vmc.cpp
   kagome.cpp
+  kagome_scaling.cpp
 )
 
 foreach(EXAMPLE_FILE ${EXAMPLE_FILES})
