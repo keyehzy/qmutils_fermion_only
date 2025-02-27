@@ -37,6 +37,8 @@ class SawtoothModel {
     return m_interaction_hamiltonian;
   }
 
+  const std::vector<Vec2>& position() const { return m_position; }
+
   const Index& index() const { return m_index; }
   float t1() const { return m_t1; }
   float t2() const { return m_t2; }
@@ -47,6 +49,7 @@ class SawtoothModel {
   Index m_index;
   Expression m_hopping_hamiltonian;
   Expression m_interaction_hamiltonian;
+  std::vector<Vec2> m_position;
 
   void construct_hamiltonian() {
     auto s = Operator::Spin::Up;
@@ -64,6 +67,10 @@ class SawtoothModel {
           m_t1 * Expression::Boson::hopping(B_site, next_A_site, s);
       m_hopping_hamiltonian +=
           m_t2 * Expression::Boson::hopping(A_site, next_A_site, s);
+
+      Vec2 displacement = Vec2{1, 0} * i;
+      m_position[A_site] = Vec2{0, 0} + displacement;
+      m_position[B_site] = Vec2{0.5f, std::sqrt(2.0f)} + displacement;
     }
 
     for (size_t i = 0; i < L; ++i) {
@@ -87,14 +94,6 @@ class SawtoothModel {
   }
 
  public:
-  Expression s(size_t i) {
-    auto s = Operator::Spin::Up;
-    Expression result;
-    size_t A_site = m_index.to_orbital(i, 0);
-    result += Term::Boson::creation(s, A_site);
-    return result;
-  }
-
   Expression cls(size_t i) {
     auto s = Operator::Spin::Up;
     Expression result;
@@ -126,19 +125,36 @@ void run_unprojected_simulation(
   (void)model;
   (void)basis;
 
+  const auto& positions = model.position();
+
   TimeIntegrator integrator(initial_time, final_time, num_time_steps, H_matrix);
 
-  std::ofstream data_stream("data.txt");
+  std::ofstream plot_stream("data.txt");
+  std::ofstream animation_stream("data.txt");
+  size_t frame = 0;
   do {
     for (const auto& density_matrix : density_matrices) {
-      data_stream
+      plot_stream
           << arma::cdot(state_vector, density_matrix * state_vector).real();
-      data_stream << " ";
+      plot_stream << " ";
     }
-    data_stream << std::endl;
+    plot_stream << "\n";
+
+    animation_stream << "\n\n# Frame " << frame << "\n";
+    animation_stream << "# x y density\n";
+
+    for (size_t index = 0; index < positions.size(); ++index) {
+      float density = arma::dot(arma::conj(state_vector),
+                                density_matrices[index] * state_vector)
+                          .real();
+      animation_stream << positions[index].x << " " << positions[index].y << " "
+                       << density << "\n";
+    }
+    ++frame;
   } while (integrator.step(state_vector));
 
-  data_stream.close();
+  plot_stream.close();
+  animation_stream.close();
 }
 
 template <size_t L>
@@ -148,8 +164,8 @@ void run_projected_simulation(
     const arma::cx_fmat& interaction_matrix,
     const std::vector<arma::cx_fmat>& density_matrices,
     arma::cx_fvec state_vector, float initial_time, float final_time,
-    size_t num_time_steps, float t2) {
-  std::cout << "\n# Time evolution with projection to flat band" << std::endl;
+    size_t num_time_steps) {
+  std::cout << "\n# Time evolution with projection to flat band\n";
 
   arma::fvec eigenvalues;
   arma::cx_fmat eigenvectors;
@@ -231,7 +247,7 @@ int main() {
     }
   }
 
-  auto initial_state =
+  arma::cx_fvec initial_state =
       arma::normalise(compute_vector_elements_serial<arma::cx_fvec>(
           basis, model.cls(L / 2) * model.cls(L / 2)));
 
@@ -241,6 +257,6 @@ int main() {
 
   run_projected_simulation<L>(model, basis, hopping_matrix, interaction_matrix,
                               density_matrices, initial_state, initial_time,
-                              final_time, num_time_steps, t2);
+                              final_time, num_time_steps);
   return 0;
 }
