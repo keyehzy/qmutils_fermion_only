@@ -14,6 +14,12 @@ using namespace qmutils;
 
 // Reference: arXiv:1007.4640
 
+struct Vec2 {
+  float x, y;
+  Vec2 operator+(const Vec2& other) { return Vec2{x + other.x, y + other.y}; }
+  Vec2 operator*(float a) { return Vec2{x * a, y * a}; }
+};
+
 template <size_t L>
 class SawtoothModel {
  public:
@@ -30,6 +36,7 @@ class SawtoothModel {
   const Expression& interaction_hamiltonian() const {
     return m_interaction_hamiltonian;
   }
+
   const Index& index() const { return m_index; }
   float t1() const { return m_t1; }
   float t2() const { return m_t2; }
@@ -43,6 +50,8 @@ class SawtoothModel {
 
   void construct_hamiltonian() {
     auto s = Operator::Spin::Up;
+
+    m_position.resize(L * 2);
 
     for (size_t i = 0; i < L; ++i) {
       size_t A_site = m_index.to_orbital(i, 0);
@@ -233,6 +242,5 @@ int main() {
   run_projected_simulation<L>(model, basis, hopping_matrix, interaction_matrix,
                               density_matrices, initial_state, initial_time,
                               final_time, num_time_steps, t2);
-
   return 0;
 }
