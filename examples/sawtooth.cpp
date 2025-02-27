@@ -24,13 +24,22 @@ class SawtoothModel {
     construct_hamiltonian();
   }
 
-  const Expression& hamiltonian() const { return m_hamiltonian; }
+  const Expression& hopping_hamiltonian() const {
+    return m_hopping_hamiltonian;
+  }
+  const Expression& interaction_hamiltonian() const {
+    return m_interaction_hamiltonian;
+  }
   const Index& index() const { return m_index; }
+  float t1() const { return m_t1; }
+  float t2() const { return m_t2; }
+  float U() const { return m_U; }
 
  private:
   float m_t1, m_t2, m_U;
   Index m_index;
-  Expression m_hamiltonian;
+  Expression m_hopping_hamiltonian;
+  Expression m_interaction_hamiltonian;
 
   void construct_hamiltonian() {
     auto s = Operator::Spin::Up;
@@ -40,10 +49,11 @@ class SawtoothModel {
       size_t B_site = m_index.to_orbital(i, 1);
       size_t next_A_site = m_index.to_orbital((i + 1) % L, 0);
 
-      m_hamiltonian += m_t1 * Expression::Boson::hopping(A_site, B_site, s);
-      m_hamiltonian +=
+      m_hopping_hamiltonian +=
+          m_t1 * Expression::Boson::hopping(A_site, B_site, s);
+      m_hopping_hamiltonian +=
           m_t1 * Expression::Boson::hopping(B_site, next_A_site, s);
-      m_hamiltonian +=
+      m_hopping_hamiltonian +=
           m_t2 * Expression::Boson::hopping(A_site, next_A_site, s);
     }
 
@@ -51,17 +61,19 @@ class SawtoothModel {
       size_t A_site = m_index.to_orbital(i, 0);
       size_t B_site = m_index.to_orbital(i, 1);
 
-      m_hamiltonian += 0.5f * m_U *
-                       Term({Operator::Boson::creation(s, A_site),
-                             Operator::Boson::creation(s, A_site),
-                             Operator::Boson::annihilation(s, A_site),
-                             Operator::Boson::annihilation(s, A_site)});
+      m_interaction_hamiltonian +=
+          0.5f * m_U *
+          Term({Operator::Boson::creation(s, A_site),
+                Operator::Boson::creation(s, A_site),
+                Operator::Boson::annihilation(s, A_site),
+                Operator::Boson::annihilation(s, A_site)});
 
-      m_hamiltonian += 0.5f * m_U *
-                       Term({Operator::Boson::creation(s, B_site),
-                             Operator::Boson::creation(s, B_site),
-                             Operator::Boson::annihilation(s, B_site),
-                             Operator::Boson::annihilation(s, B_site)});
+      m_interaction_hamiltonian +=
+          0.5f * m_U *
+          Term({Operator::Boson::creation(s, B_site),
+                Operator::Boson::creation(s, B_site),
+                Operator::Boson::annihilation(s, B_site),
+                Operator::Boson::annihilation(s, B_site)});
     }
   }
 
@@ -86,50 +98,141 @@ class SawtoothModel {
     return result;
   }
 
-  Expression density_operator(size_t i) {
-    auto s = Operator::Spin::Up;
+  Expression density_operator(size_t i, size_t k) const {
     Expression result;
-    size_t A_site = m_index.to_orbital(i, 0);
-    result += Term::Boson::density(s, A_site);
+    result +=
+        Term::Boson::density(Operator::Spin::Up, m_index.to_orbital(i, k));
     return result;
   }
 };
 
+template <size_t L>
+void run_unprojected_simulation(
+    const SawtoothModel<L>& model, const BosonicBasis& basis,
+    const arma::sp_cx_fmat& H_matrix,
+    const std::vector<arma::cx_fmat>& density_matrices,
+    arma::cx_fvec state_vector, float initial_time, float final_time,
+    size_t num_time_steps) {
+  std::cout << "# Time evolution without projection" << std::endl;
+  (void)model;
+  (void)basis;
+
+  TimeIntegrator integrator(initial_time, final_time, num_time_steps, H_matrix);
+
+  std::ofstream data_stream("data.txt");
+  do {
+    for (const auto& density_matrix : density_matrices) {
+      data_stream
+          << arma::cdot(state_vector, density_matrix * state_vector).real();
+      data_stream << " ";
+    }
+    data_stream << std::endl;
+  } while (integrator.step(state_vector));
+
+  data_stream.close();
+}
+
+template <size_t L>
+void run_projected_simulation(
+    const SawtoothModel<L>& model, const BosonicBasis& basis,
+    const arma::cx_fmat& hopping_matrix,
+    const arma::cx_fmat& interaction_matrix,
+    const std::vector<arma::cx_fmat>& density_matrices,
+    arma::cx_fvec state_vector, float initial_time, float final_time,
+    size_t num_time_steps, float t2) {
+  std::cout << "\n# Time evolution with projection to flat band" << std::endl;
+
+  arma::fvec eigenvalues;
+  arma::cx_fmat eigenvectors;
+  arma::eig_sym(eigenvalues, eigenvectors, hopping_matrix);
+
+  float single_flat_band_energy = -2.0f * model.t2();
+  float tol = 0.1f * model.t2() * model.t2() / model.U();
+  size_t count_flat_band_state = 0;
+
+  for (size_t i = 0; i < basis.size(); i++) {
+    if (eigenvalues[count_flat_band_state] <
+        basis.particles() * single_flat_band_energy + tol) {
+      ++count_flat_band_state;
+    }
+  }
+
+  arma::cx_fmat degenerate_submatrix =
+      eigenvectors.cols(0, count_flat_band_state - 1);
+
+  arma::cx_fmat projected_H_matrix =
+      degenerate_submatrix.t() * interaction_matrix * degenerate_submatrix;
+
+  arma::cx_fvec projected_state_vector =
+      arma::normalise(degenerate_submatrix.t() * state_vector);
+
+  std::vector<arma::cx_fmat> projected_density_matrices;
+  for (const auto& density_matrix : density_matrices) {
+    arma::cx_fmat projected_matrix =
+        degenerate_submatrix.t() * density_matrix * degenerate_submatrix;
+    projected_density_matrices.push_back(projected_matrix);
+  }
+
+  TimeIntegrator projected_integrator(initial_time, final_time, num_time_steps,
+                                      projected_H_matrix);
+
+  std::ofstream data_stream("projected_data.txt");
+  do {
+    for (const auto& density_matrix : projected_density_matrices) {
+      data_stream << arma::cdot(projected_state_vector,
+                                density_matrix * projected_state_vector)
+                         .real();
+      data_stream << " ";
+    }
+    data_stream << std::endl;
+  } while (projected_integrator.step(projected_state_vector));
+
+  data_stream.close();
+}
+
 int main() {
-  const size_t L = 35;
+  const size_t L = 16;
+  const size_t P = 2;
   const float t2 = 1.0f;
   const float t1 = t2 * std::sqrt(2.0f);
   const float U = 1.0f;
-  BosonicBasis basis(2 * L, 2);  // 2 sites per unit cell, P particles
-
-  SawtoothModel<L> model(t1, t2, U);
-
-  auto H_matrix =
-      compute_matrix_elements<arma::sp_cx_fmat>(basis, model.hamiltonian());
-
-  std::vector<arma::sp_cx_fmat> density_operator_matrix;
-  for (size_t i = 0; i < L; i++) {
-    density_operator_matrix.push_back(compute_matrix_elements<arma::sp_cx_fmat>(
-        basis, model.density_operator(i)));
-  }
-
-  auto state_vector = compute_vector_elements_serial<arma::cx_fvec>(
-      basis, model.cls(L / 2 + 1) * model.cls(L / 2 + 1));
-  state_vector /= arma::norm(state_vector);
 
   float initial_time = 0.0f;
   float final_time = 100.0f / t2;
-  size_t num_time_steps = 2500;
-  TimeIntegrator integrator(initial_time, final_time, num_time_steps, H_matrix);
+  size_t num_time_steps = 1000;
 
-  while (integrator.step(state_vector)) {
-    for (size_t i = 0; i < L; i++) {
-      std::cout << arma::cdot(state_vector,
-                              density_operator_matrix[i] * state_vector)
-                       .real();
-      if (i < L - 1) std::cout << " ";
+  SawtoothModel<L> model(t1, t2, U);
+  BosonicBasis basis(2 * L, P);
+
+  auto hopping_matrix = compute_matrix_elements<arma::cx_fmat>(
+      basis, model.hopping_hamiltonian());
+
+  auto interaction_matrix = compute_matrix_elements<arma::cx_fmat>(
+      basis, model.interaction_hamiltonian());
+
+  auto H_matrix = compute_matrix_elements<arma::sp_cx_fmat>(
+      basis, model.hopping_hamiltonian() + model.interaction_hamiltonian());
+
+  std::vector<arma::cx_fmat> density_matrices;
+  for (size_t i = 0; i < L; i++) {
+    for (size_t k = 0; k < 2; k++) {
+      arma::cx_fmat density_matrix = compute_matrix_elements<arma::cx_fmat>(
+          basis, model.density_operator(i, k));
+      density_matrices.push_back(density_matrix);
     }
-    std::cout << std::endl;
   }
+
+  auto initial_state =
+      arma::normalise(compute_vector_elements_serial<arma::cx_fvec>(
+          basis, model.cls(L / 2) * model.cls(L / 2)));
+
+  run_unprojected_simulation<L>(model, basis, H_matrix, density_matrices,
+                                initial_state, initial_time, final_time,
+                                num_time_steps);
+
+  run_projected_simulation<L>(model, basis, hopping_matrix, interaction_matrix,
+                              density_matrices, initial_state, initial_time,
+                              final_time, num_time_steps, t2);
+
   return 0;
 }
