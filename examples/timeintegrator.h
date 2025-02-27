@@ -14,6 +14,10 @@ class TimeIntegrator {
     identity_matrix_ = arma::speye<arma::sp_cx_fmat>(
         hamiltonian_matrix_.n_rows, hamiltonian_matrix_.n_cols);
 
+    update();
+  }
+
+  void update() {
     auto scaled_h =
         std::complex<float>(0, time_step_ * 0.5f) * hamiltonian_matrix_;
 
@@ -39,7 +43,7 @@ class TimeIntegrator {
       std::abort();
     }
 
-    state_vector = result / arma::norm(result);
+    state_vector = result;
     ++counter_;
     return true;
   }
