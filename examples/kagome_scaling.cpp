@@ -18,7 +18,7 @@ class KagomeModel {
   using Index = DynamicIndex;
 
   KagomeModel(size_t lx, size_t ly, float t1, float U)
-    : m_t1(t1), m_U(U), m_index({lx, ly, 3}) {
+      : m_t1(t1), m_U(U), m_index({lx, ly, 3}) {
     construct_hamiltonian();
   }
 
@@ -75,49 +75,46 @@ class KagomeModel {
 };
 
 class Cluster {
-private:
-    float m_threshold;
-    std::vector<std::vector<float>> m_clusters;
+ private:
+  float m_threshold;
+  std::vector<std::vector<float>> m_clusters;
 
-public:
-  Cluster(const std::vector<float>& points, float distance_threshold) : m_threshold(distance_threshold) {
-        if (points.empty()) {
-            return;
-        }
+ public:
+  Cluster(const std::vector<float>& points, float distance_threshold)
+      : m_threshold(distance_threshold) {
+    if (points.empty()) {
+      return;
+    }
 
-        std::vector<float> sorted_points = points;
-        std::sort(sorted_points.begin(), sorted_points.end());
+    std::vector<float> sorted_points = points;
+    std::sort(sorted_points.begin(), sorted_points.end());
 
-        std::vector<float> current_cluster = {sorted_points[0]};
+    std::vector<float> current_cluster = {sorted_points[0]};
 
-        for (size_t i = 1; i < sorted_points.size(); i++) {
-            if (sorted_points[i] - sorted_points[i-1] <= m_threshold) {
-                current_cluster.push_back(sorted_points[i]);
-            } else {
-                m_clusters.push_back(current_cluster);
-                current_cluster = {sorted_points[i]};
-            }
-        }
-
+    for (size_t i = 1; i < sorted_points.size(); i++) {
+      if (sorted_points[i] - sorted_points[i - 1] <= m_threshold) {
+        current_cluster.push_back(sorted_points[i]);
+      } else {
         m_clusters.push_back(current_cluster);
+        current_cluster = {sorted_points[i]};
+      }
     }
 
-    int size() const {
-        return m_clusters.size();
-    }
+    m_clusters.push_back(current_cluster);
+  }
 
-    std::vector<int> cluster_sizes() const {
-        std::vector<int> sizes;
-        sizes.reserve(m_clusters.size());
-        for (const auto& cluster : m_clusters) {
-            sizes.push_back(cluster.size());
-        }
-        return sizes;
-    }
+  int size() const { return m_clusters.size(); }
 
-    const std::vector<std::vector<float>>& clusters() const {
-        return m_clusters;
+  std::vector<int> cluster_sizes() const {
+    std::vector<int> sizes;
+    sizes.reserve(m_clusters.size());
+    for (const auto& cluster : m_clusters) {
+      sizes.push_back(cluster.size());
     }
+    return sizes;
+  }
+
+  const std::vector<std::vector<float>>& clusters() const { return m_clusters; }
 };
 
 float compute_bandwidth(const std::vector<float>& cluster) {
@@ -136,29 +133,11 @@ float compute_bandwidth(const std::vector<float>& cluster) {
   return max_val - min_val;
 }
 
-float ener(float t, size_t i, size_t j, size_t Lx, size_t Ly) {
-  float kx = 2.0f * std::numbers::pi_v<float> * i / Lx;
-  float ky = 2.0f * std::numbers::pi_v<float> * j / Ly;
-  return t - t * std::sqrt(3.0f + 2.0f * std::cos(kx) + 2.0f * std::cos(ky) + 2.0f * std::cos(kx-ky));
-}
-
-float find_bandwidth(float t, size_t lx, size_t ly, const std::vector<float>& eigenvalues) {
-  float max_val = -2.0f + ener(t, 1, 0, lx, ly);
-  float min_val = -4.0f * t;
-  float offset = (max_val - min_val) / 10.0f;
-
-  float max_ = std::numeric_limits<float>::lowest();
-  float min_ = std::numeric_limits<float>::max();
-
-  for (float x : eigenvalues) {
-    if (x > min_val + offset && x < max_val - offset) {
-      max_ = std::max(max_, x);
-      min_ = std::min(min_, x);
-    }
-  }
-
-  return max_ - min_;
-
+float ener(float t, size_t i, size_t j, size_t lx, size_t ly) {
+  float kx = 2.0f * std::numbers::pi_v<float> * i / lx;
+  float ky = 2.0f * std::numbers::pi_v<float> * j / ly;
+  return t - t * std::sqrt(3.0f + 2.0f * std::cos(kx) + 2.0f * std::cos(ky) +
+                           2.0f * std::cos(kx - ky));
 }
 
 int main() {
@@ -166,36 +145,48 @@ int main() {
   const float t1 = 1.0f;
   const float U = 4.0f;
 
-  // {
-  //   size_t lx = 6, ly = 6;
-  //     KagomeModel model(lx, ly, t1, U);
-  //     BosonicBasis basis(lx * ly * 3, P);
+  std::ofstream interval_file("scaling/intervals.txt");
 
-  //     auto H_matrix =
-  //       compute_matrix_elements<arma::cx_fmat>(basis, model.hamiltonian());
-
-  //     arma::fvec eigenvalues;
-  //     arma::eig_sym(eigenvalues, H_matrix);
-  //     std::cout << eigenvalues << "\n";
-  // }
-  // return 0;
-
-  for (size_t lx = 3; lx < 10; lx++) {
+  for (size_t lx = 3; lx < 7; lx++) {
     size_t ly = lx;
     KagomeModel model(lx, ly, t1, U);
     BosonicBasis basis(lx * ly * 3, P);
 
     auto H_matrix =
-      compute_matrix_elements<arma::cx_fmat>(basis, model.hamiltonian());
+        compute_matrix_elements<arma::cx_fmat>(basis, model.hamiltonian());
 
     arma::fvec eigenvalues;
     arma::eig_sym(eigenvalues, H_matrix);
 
     auto vals = arma::conv_to<std::vector<float>>::from(eigenvalues);
-    std::cout << lx << " " << find_bandwidth(t1, lx, ly, vals) << "\n";
+
+    std::string vals_filename =
+        "scaling/eigenvalues_lx_" + std::to_string(lx) + ".txt";
+    std::ofstream vals_file(vals_filename);
+
+    float max_val = -2.0f + ener(t1, 1, 0, lx, ly);
+    float min_val = -4.0f * t1;
+    float offset = (max_val - min_val) / 10.0f;
+
+    float max_ = std::numeric_limits<float>::lowest();
+    float min_ = std::numeric_limits<float>::max();
+
+    for (float x : eigenvalues) {
+      if (x > min_val + offset && x < max_val - offset) {
+        max_ = std::max(max_, x);
+        min_ = std::min(min_, x);
+      }
+      if (x > min_val && x < max_val) {
+        vals_file << x << "\n";
+      }
+      if (x > max_val - offset) break;
+    }
+
+    vals_file.close();
+    interval_file << lx << " " << (max_ + min_) / 2.f << " " << min_ << " "
+                  << max_ << "\n";
   }
-
-
+  interval_file.close();
 
   return 0;
 }
