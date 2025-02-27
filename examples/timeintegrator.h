@@ -16,13 +16,13 @@ class TimeIntegratorBase {
       : initial_time_(initial_time),
         final_time_(final_time),
         num_time_steps_(num_time_steps),
-        counter_(0),
-        hamiltonian_matrix_(h_matrix) {
+        counter_(0) {
     if (num_time_steps_ == 0 || final_time_ <= initial_time_) {
       throw std::invalid_argument("Invalid time parameters");
     }
-
-    time_step_ = (final_time_ - initial_time_) / static_cast<float>(num_time_steps_);
+    time_step_ =
+        (final_time_ - initial_time_) / static_cast<float>(num_time_steps_);
+  }
 
  public:
   float time() const {
@@ -69,7 +69,7 @@ class TimeIntegrator<arma::sp_cx_fmat> : public TimeIntegratorBase {
       throw std::runtime_error("Failed to solve linear system");
     }
 
-    state_vector = result;
+    state_vector = result_;
     ++counter_;
     return true;
   }
@@ -113,8 +113,7 @@ class TimeIntegrator<arma::cx_fmat> : public TimeIntegratorBase {
     arma::cx_fvec result;
 
     if (!arma::solve(result, crank_minus_, right_hand_side)) {
-      std::cerr << "Failed to solve linear system" << std::endl;
-      std::abort();
+      throw std::runtime_error("Failed to solve linear system");
     }
 
     state_vector = result;
