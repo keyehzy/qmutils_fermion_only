@@ -114,22 +114,12 @@ class Term {
   static Term density_density(Operator::Spin spin1, size_t i,
                               Operator::Spin spin2, size_t j);
 
-  struct Fermion;
-  struct Boson;
-
-  bool is_purely(const Operator::Statistics& s) const {
-    return std::all_of(
-        m_operators.begin(), m_operators.end(),
-        [&](const Operator& op) { return op.statistics() == s; });
-  }
-
   static bool is_diagonal(const Term::container_type& ops) {
     std::unordered_map<size_t, int> counts;
 
     for (const auto& op : ops) {
-      auto key = Operator(Operator::Type::Creation, op.spin(), op.orbital(),
-                          op.statistics())
-                     .data();
+      auto key =
+          Operator(Operator::Type::Creation, op.spin(), op.orbital()).data();
       if (op.type() == Operator::Type::Creation) {
         counts[key] += 1;
       } else {
@@ -150,56 +140,6 @@ class Term {
  private:
   coefficient_type m_coefficient;
   container_type m_operators;
-};
-
-struct Term::Fermion {
-  static Term creation(Operator::Spin spin, size_t orbital) {
-    return Term({Operator::Fermion::creation(spin, orbital)});
-  }
-
-  static Term annihilation(Operator::Spin spin, size_t orbital) {
-    return Term({Operator::Fermion::annihilation(spin, orbital)});
-  }
-
-  static Term one_body(Operator::Spin spin1, size_t orbital1,
-                       Operator::Spin spin2, size_t orbital2) {
-    return Term({Operator::Fermion::creation(spin1, orbital1),
-                 Operator::Fermion::annihilation(spin2, orbital2)});
-  }
-
-  static Term density(Operator::Spin spin, size_t orbital) {
-    return Term({Operator::Fermion::creation(spin, orbital),
-                 Operator::Fermion::annihilation(spin, orbital)});
-  }
-
-  static Term density_density(Operator::Spin spin1, size_t i,
-                              Operator::Spin spin2, size_t j) {
-    return Term::Fermion::density(spin1, i) * Term::Fermion::density(spin2, j);
-  }
-};
-
-struct Term::Boson {
-  static Term creation(Operator::Spin spin, size_t orbital) {
-    return Term({Operator::Boson::creation(spin, orbital)});
-  }
-  static Term annihilation(Operator::Spin spin, size_t orbital) {
-    return Term({Operator::Boson::annihilation(spin, orbital)});
-  }
-  static Term one_body(Operator::Spin spin1, size_t orbital1,
-                       Operator::Spin spin2, size_t orbital2) {
-    return Term({Operator::Boson::creation(spin1, orbital1),
-                 Operator::Boson::annihilation(spin2, orbital2)});
-  }
-
-  static Term density(Operator::Spin spin, size_t orbital) {
-    return Term({Operator::Boson::creation(spin, orbital),
-                 Operator::Boson::annihilation(spin, orbital)});
-  }
-
-  static Term density_density(Operator::Spin spin1, size_t i,
-                              Operator::Spin spin2, size_t j) {
-    return Term::Boson::density(spin1, i) * Term::Boson::density(spin2, j);
-  }
 };
 }  // namespace qmutils
 

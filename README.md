@@ -5,13 +5,6 @@
 
 qmutils is a fast, modern C++ library for quantum mechanics calculations. It provides an intuitive interface for quantum operator algebra, including efficient normal ordering and matrix element computation.
 
-## Why Use qmutils?
-
-- **Fast:** Optimized implementations with performance in mind, especially caching  for complex expressions and repeated operations and multi-threading.
-- **Intuitive:** Clean, modern C++ interface for defining and manipulating quantum operators and expressions.
-- **Flexible:** Works with any second quantized quantum many-body system, allowing for the study of diverse models like the Hubbard model, t-J model, and much others (see [examples](examples/)).
-- **Reliable:** Comprehensive test coverage and benchmarks ensure the accuracy and reliability of the library.
-
 ## Quick Start
 
 ### Installation
@@ -42,7 +35,7 @@ H += t * Term::hopping(0, 1, Operator::Spin::Up);   // Hopping term
 H += u * Term::density(Operator::Spin::Up, 0);      // Density term
 
 // Work with basis states
-FermionicBasis basis(4, 2, /*Sz=*/0);  // 4 orbitals, 2 particles
+Basis basis(4, 2, /*Sz=*/0);  // 4 orbitals, 2 particles
 auto matrix = compute_matrix_elements<SpMat_cf>(basis, H);
 ```
 
@@ -55,15 +48,10 @@ See [examples](examples/) for more complex usages.
 
 Optional:
 - Google Test (for testing)
-- Google Benchmark (for benchmarks)
-- Armadillo (for examples)
-- OpenBLAS (for examples)
-- OpenMP (for multi-threading)
-
 
 ## Features
 - Creation/annihilation operators with spin and orbital indices.
-- Bosonic and Fermionic support.
+- Only Fermionic support.
 - Efficient symbolic normal ordering with caching.
 - Basis state management.
 - Matrix element computation (dense and sparse matrix support).

@@ -9,19 +9,14 @@ std::ostream& operator<<(std::ostream& os, const Expression& expression) {
   return os;
 }
 
-static bool constexpr both_are_fermions_and_equal(const Operator& a,
-                                                  const Operator& b) {
-  return Operator::is_fermion(a) && Operator::is_fermion(b) && a == b;
-}
-
 void Expression::normalize() {
   // 1) Remove terms with coefficients that are effectively zero
-  // 2) In the case of Fermions, remove terms with adjacent identical operators
+  // 2) Remove terms with adjacent identical operators
   for (auto it = m_terms.begin(); it != m_terms.end();) {
     if ((std::norm(it->second) <
          std::numeric_limits<coefficient_type::value_type>::epsilon()) ||
-        (std::adjacent_find(it->first.begin(), it->first.end(),
-                            both_are_fermions_and_equal) != it->first.end())) {
+        (std::adjacent_find(it->first.begin(), it->first.end()) !=
+         it->first.end())) {
       it = m_terms.erase(it);
     } else {
       ++it;

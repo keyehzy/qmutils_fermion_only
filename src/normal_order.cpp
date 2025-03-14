@@ -17,7 +17,9 @@ Expression NormalOrderer::normal_order(const Expression& expr) {
 }
 
 static constexpr size_t phase_factor(const Operator& a, const Operator& b) {
-  return Operator::is_fermion(a) && Operator::is_fermion(b);
+  (void)a;
+  (void)b;
+  return 1;
 }
 
 static constexpr int phase_to_sign(size_t phase) { return 1 - 2 * (phase & 1); }

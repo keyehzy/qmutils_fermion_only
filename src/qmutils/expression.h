@@ -191,62 +191,10 @@ class Expression {
   static Expression hopping(coefficient_type coeff, size_t from_orbital,
                             size_t to_orbital, Operator::Spin spin);
 
-  struct Fermion;
-  struct Boson;
   struct Spin;
-
-  bool is_purely(const Operator::Statistics& s) const {
-    return std::all_of(m_terms.begin(), m_terms.end(), [&](const auto& a) {
-      return Term(a.first).is_purely(s);
-    });
-  }
 
  private:
   terms_type m_terms;
-};
-
-struct Expression::Fermion {
-  static Expression hopping(size_t from_orbital, size_t to_orbital,
-                            Operator::Spin spin) {
-    QMUTILS_ASSERT(from_orbital != to_orbital);
-    Expression result;
-    result += Term::Fermion::one_body(spin, to_orbital, spin, from_orbital);
-    result += Term::Fermion::one_body(spin, from_orbital, spin, to_orbital);
-    return result;
-  }
-
-  static Expression hopping(coefficient_type coeff, size_t from_orbital,
-                            size_t to_orbital, Operator::Spin spin) {
-    QMUTILS_ASSERT(from_orbital != to_orbital);
-    Expression result;
-    result +=
-        coeff * Term::Fermion::one_body(spin, to_orbital, spin, from_orbital);
-    result += std::conj(coeff) *
-              Term::Fermion::one_body(spin, from_orbital, spin, to_orbital);
-    return result;
-  }
-};
-
-struct Expression::Boson {
-  static Expression hopping(size_t from_orbital, size_t to_orbital,
-                            Operator::Spin spin) {
-    QMUTILS_ASSERT(from_orbital != to_orbital);
-    Expression result;
-    result += Term::Boson::one_body(spin, to_orbital, spin, from_orbital);
-    result += Term::Boson::one_body(spin, from_orbital, spin, to_orbital);
-    return result;
-  }
-
-  static Expression hopping(coefficient_type coeff, size_t from_orbital,
-                            size_t to_orbital, Operator::Spin spin) {
-    QMUTILS_ASSERT(from_orbital != to_orbital);
-    Expression result;
-    result +=
-        coeff * Term::Boson::one_body(spin, to_orbital, spin, from_orbital);
-    result += std::conj(coeff) *
-              Term::Boson::one_body(spin, from_orbital, spin, to_orbital);
-    return result;
-  }
 };
 
 struct Expression::Spin {

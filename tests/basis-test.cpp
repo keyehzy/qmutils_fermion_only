@@ -97,7 +97,7 @@ TEST_F(BasisTest, EqualityOperator) {
   EXPECT_NE(basis1, basis3);
 }
 
-class FermionicBasisSzTest : public ::testing::Test {
+class BasisSzTest : public ::testing::Test {
  protected:
   static Basis::operators_type create_operators(
       std::initializer_list<std::pair<Operator::Spin, uint8_t>> ops) {
@@ -119,50 +119,50 @@ class FermionicBasisSzTest : public ::testing::Test {
   }
 };
 
-TEST_F(FermionicBasisSzTest, ConstructorAndBasicProperties) {
-  FermionicBasis basis(3, 2, 0);  // 3 orbitals, 2 particles, Sz = 0
+TEST_F(BasisSzTest, ConstructorAndBasicProperties) {
+  Basis basis(3, 2, 0);  // 3 orbitals, 2 particles, Sz = 0
   EXPECT_EQ(basis.orbitals(), 3);
   EXPECT_EQ(basis.particles(), 2);
   EXPECT_EQ(basis.size(), 9);
 }
 
-TEST_F(FermionicBasisSzTest, UnconstrainedBasis) {
-  FermionicBasis basis(2, 2, std::nullopt);
+TEST_F(BasisSzTest, UnconstrainedBasis) {
+  Basis basis(2, 2, std::nullopt);
   EXPECT_EQ(basis.size(), 6);
 }
 
-TEST_F(FermionicBasisSzTest, MaximumSz) {
-  FermionicBasis basis(2, 2, 2);
+TEST_F(BasisSzTest, MaximumSz) {
+  Basis basis(2, 2, 2);
   EXPECT_EQ(basis.size(), 1);
   auto state =
       create_operators({{Operator::Spin::Up, 0}, {Operator::Spin::Up, 1}});
   EXPECT_TRUE(basis.contains(state));
 }
 
-TEST_F(FermionicBasisSzTest, MinimumSz) {
-  FermionicBasis basis(2, 2, -2);
+TEST_F(BasisSzTest, MinimumSz) {
+  Basis basis(2, 2, -2);
   EXPECT_EQ(basis.size(), 1);
   auto state =
       create_operators({{Operator::Spin::Down, 0}, {Operator::Spin::Down, 1}});
   EXPECT_TRUE(basis.contains(state));
 }
 
-TEST_F(FermionicBasisSzTest, VerifySzValueForAllStates) {
-  FermionicBasis basis(3, 2, 0);
+TEST_F(BasisSzTest, VerifySzValueForAllStates) {
+  Basis basis(3, 2, 0);
   for (const auto& term : basis) {
     EXPECT_EQ(calculate_sz(term.operators()), 0);
   }
 }
 
-TEST_F(FermionicBasisSzTest, NonZeroSz) {
-  FermionicBasis basis(3, 2, 2);
+TEST_F(BasisSzTest, NonZeroSz) {
+  Basis basis(3, 2, 2);
   for (const auto& term : basis) {
     EXPECT_EQ(calculate_sz(term.operators()), 2);
   }
 }
 
-TEST_F(FermionicBasisSzTest, VerifyStateOrdering) {
-  FermionicBasis basis(2, 2, 0);
+TEST_F(BasisSzTest, VerifyStateOrdering) {
+  Basis basis(2, 2, 0);
   std::vector<Term> states(basis.begin(), basis.end());
 
   // Verify states are ordered
@@ -171,8 +171,8 @@ TEST_F(FermionicBasisSzTest, VerifyStateOrdering) {
   }
 }
 
-TEST_F(FermionicBasisSzTest, SpecificStateContent) {
-  FermionicBasis basis(2, 2, 0);
+TEST_F(BasisSzTest, SpecificStateContent) {
+  Basis basis(2, 2, 0);
 
   // These states should be present
   EXPECT_TRUE(basis.contains(
@@ -189,26 +189,26 @@ TEST_F(FermionicBasisSzTest, SpecificStateContent) {
       {{Operator::Spin::Down, 0}, {Operator::Spin::Down, 1}})));
 }
 
-TEST_F(FermionicBasisSzTest, CompareConstrainedVsUnconstrained) {
-  FermionicBasis unconstrained(2, 2, std::nullopt);
-  FermionicBasis sz_zero(2, 2, 0);
-  FermionicBasis sz_plus_two(2, 2, 2);
-  FermionicBasis sz_minus_two(2, 2, -2);
+TEST_F(BasisSzTest, CompareConstrainedVsUnconstrained) {
+  Basis unconstrained(2, 2, std::nullopt);
+  Basis sz_zero(2, 2, 0);
+  Basis sz_plus_two(2, 2, 2);
+  Basis sz_minus_two(2, 2, -2);
 
   // Total states should equal sum of all Sz sectors
   EXPECT_EQ(unconstrained.size(),
             sz_zero.size() + sz_plus_two.size() + sz_minus_two.size());
 }
 
-TEST_F(FermionicBasisSzTest, EmptyBasisEdgeCases) {
+TEST_F(BasisSzTest, EmptyBasisEdgeCases) {
   // Empty basis with Sz constraint
-  FermionicBasis basis1(2, 0, 0);
+  Basis basis1(2, 0, 0);
   EXPECT_EQ(basis1.size(), 1);  // Only vacuum state
 }
 
-TEST_F(FermionicBasisSzTest, FullBasisEdgeCases) {
+TEST_F(BasisSzTest, FullBasisEdgeCases) {
   // Fully occupied with Sz = 0
-  FermionicBasis basis1(2, 4, 0);
+  Basis basis1(2, 4, 0);
   EXPECT_EQ(basis1.size(), 1);
 }
 
